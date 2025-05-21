@@ -1,0 +1,12 @@
+services:
+  user-app:
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://user-db:27017/sparkflow_user
+    ports:
+      - "8081:8081"
+
+  user-db:
+    environment:
+      - MONGO_INITDB_DATABASE=sparkflow_user
+    ports:
+      - "27017:27017" 

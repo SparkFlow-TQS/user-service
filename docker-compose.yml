@@ -1,0 +1,23 @@
+services:
+  user-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - user-db
+    networks:
+      - sparkflow-network
+
+  user-db:
+    image: mongo:8.0.5
+    volumes:
+      - user-mongodb-data:/data/db
+    networks:
+      - sparkflow-network
+
+networks:
+  sparkflow-network:
+    name: sparkflow-network
+
+volumes:
+  user-mongodb-data: 
