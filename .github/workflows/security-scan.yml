@@ -67,7 +67,7 @@ jobs:
           --spring.data.mongodb.uri=mongodb://localhost:27017/sparkflow_user &
         # Wait for application to be ready
         for i in {1..30}; do
-          if curl -s http://localhost:8080/actuator/health > /dev/null; then
+          if curl -s http://localhost:8081/actuator/health > /dev/null; then
             echo "Application is ready!"
             break
           fi
@@ -88,7 +88,7 @@ jobs:
         docker run -v $(pwd)/zap-output:/zap/wrk/:rw \
           --network host \
           -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-          -t http://localhost:8080 \
+          -t http://localhost:8081 \
           -g gen.conf \
           -r testreport.html
       continue-on-error: true
