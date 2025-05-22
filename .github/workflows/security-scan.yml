@@ -51,25 +51,20 @@ jobs:
         name: dependency-check-report
         path: target/dependency-check-report.html
         
-    - name: Start PostgreSQL Container
+    - name: Start MongoDB Container
       run: |
         docker run -d \
-          --name postgres \
-          -e POSTGRES_DB=test \
-          -e POSTGRES_USER=test \
-          -e POSTGRES_PASSWORD=test \
-          -p 5432:5432 \
-          postgres:16.9
-        sleep 10  # Wait for PostgreSQL to start
+          --name mongodb \
+          -p 27017:27017 \
+          mongo:7.0
+        sleep 10  # Wait for MongoDB to start
         
     - name: Start Spring Boot Application
       run: |
         ./mvnw clean package -DskipTests
         nohup java -jar target/user-service-0.0.1-SNAPSHOT.jar \
           --spring.profiles.active=test \
-          --spring.datasource.url=jdbc:postgresql://localhost:5432/test \
-          --spring.datasource.username=test \
-          --spring.datasource.password=test &
+          --spring.data.mongodb.uri=mongodb://localhost:27017/sparkflow_user &
         # Wait for application to be ready
         for i in {1..30}; do
           if curl -s http://localhost:8080/actuator/health > /dev/null; then
@@ -112,5 +107,5 @@ jobs:
           kill $(cat app.pid) || true
           rm -f app.pid
         fi
-        docker stop postgres || true
-        docker rm postgres || true
+        docker stop mongodb || true
+        docker rm mongodb || true
