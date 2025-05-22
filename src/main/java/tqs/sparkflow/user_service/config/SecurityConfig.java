@@ -87,7 +87,14 @@ public class SecurityConfig {
             + "xr-spatial-tracking=()"))
       )
         .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+        .requestMatchers(
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/swagger-resources/**",
+            "/webjars/**",
+            "/v2/api-docs/**"
+        )
         .permitAll()
         .requestMatchers("/actuator/**")
         .permitAll()
