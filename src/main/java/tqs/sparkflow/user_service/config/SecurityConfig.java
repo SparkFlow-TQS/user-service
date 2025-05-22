@@ -96,7 +96,7 @@ public class SecurityConfig {
             "/v2/api-docs/**"
         )
         .permitAll()
-        .requestMatchers("/actuator/**")
+        .requestMatchers("/actuator/**", "/actuator/health/**")
         .permitAll()
         .anyRequest()
         .authenticated()
