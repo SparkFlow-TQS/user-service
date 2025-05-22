@@ -1,4 +1,4 @@
-package tqs.sparkflow.user;
+package tqs.sparkflow.user_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
