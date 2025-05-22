@@ -249,8 +249,8 @@
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
 					<linkXRef>false</linkXRef>
-					<maxAllowedViolations>10</maxAllowedViolations>
-					<violationSeverity>warning</violationSeverity>
+					<maxAllowedViolations>0</maxAllowedViolations>
+					<violationSeverity>error</violationSeverity>
 				</configuration>
 				<executions>
 					<execution>
