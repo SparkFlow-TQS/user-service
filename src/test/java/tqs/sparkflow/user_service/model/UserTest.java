@@ -1,40 +1,93 @@
 package tqs.sparkflow.user_service.model;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class UserTest {
 
-    @Test
-    void whenCreateUser_thenUserHasCorrectFields() {
-        User user = new User();
-        user.setId("1");
-        user.setUsername("testuser");
-        user.setEmail("test@example.com");
-        user.setPassword("password123");
+    private Validator validator;
+    private User user;
 
-        assertThat(user.getId()).isEqualTo("1");
-        assertThat(user.getUsername()).isEqualTo("testuser");
-        assertThat(user.getEmail()).isEqualTo("test@example.com");
-        assertThat(user.getPassword()).isEqualTo("password123");
+    @BeforeEach
+    void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+        user = new User("testuser", "test@example.com", "password123");
     }
 
     @Test
-    void whenUpdateUser_thenUserFieldsAreUpdated() {
-        User user = new User();
-        user.setId("1");
-        user.setUsername("testuser");
-        user.setEmail("test@example.com");
-        user.setPassword("password123");
+    void whenCreateUser_thenUserIsCreatedWithDefaultValues() {
+        assertThat(user.getUsername()).isEqualTo("testuser");
+        assertThat(user.getEmail()).isEqualTo("test@example.com");
+        assertThat(user.getPassword()).isEqualTo("password123");
+        assertThat(user.isOperator()).isFalse();
+    }
 
-        // Update fields
-        user.setUsername("updateduser");
-        user.setEmail("updated@example.com");
-        user.setPassword("newpassword123");
+    @Test
+    void whenCreateUserWithOperator_thenUserIsCreatedWithOperatorTrue() {
+        User operatorUser = new User("operator", "operator@example.com", "password123", true);
+        assertThat(operatorUser.isOperator()).isTrue();
+    }
 
-        assertThat(user.getId()).isEqualTo("1"); // ID should not change
-        assertThat(user.getUsername()).isEqualTo("updateduser");
-        assertThat(user.getEmail()).isEqualTo("updated@example.com");
-        assertThat(user.getPassword()).isEqualTo("newpassword123");
+    @Test
+    void whenCreateUserWithNoArgsConstructor_thenUserIsCreatedWithNullValues() {
+        User emptyUser = new User();
+        assertThat(emptyUser.getUsername()).isNull();
+        assertThat(emptyUser.getEmail()).isNull();
+        assertThat(emptyUser.getPassword()).isNull();
+        assertThat(emptyUser.isOperator()).isFalse();
+    }
+
+    @Test
+    void whenUsernameIsBlank_thenValidationFails() {
+        user.setUsername("");
+        var violations = validator.validate(user);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+    }
+
+    @Test
+    void whenUsernameIsTooShort_thenValidationFails() {
+        user.setUsername("ab");
+        var violations = validator.validate(user);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+    }
+
+    @Test
+    void whenUsernameIsTooLong_thenValidationFails() {
+        user.setUsername("a".repeat(51));
+        var violations = validator.validate(user);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+    }
+
+    @Test
+    void whenEmailIsBlank_thenValidationFails() {
+        user.setEmail("");
+        var violations = validator.validate(user);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("email"));
+    }
+
+    @Test
+    void whenPasswordIsTooShort_thenValidationFails() {
+        user.setPassword("12345");
+        var violations = validator.validate(user);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("password"));
+    }
+
+    @Test
+    void whenPasswordIsBlank_thenValidationFails() {
+        user.setPassword("");
+        var violations = validator.validate(user);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("password"));
     }
 } 

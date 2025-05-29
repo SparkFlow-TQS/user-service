@@ -3,7 +3,7 @@ package tqs.sparkflow.user_service.repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
@@ -11,16 +11,17 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.sparkflow.user_service.model.User;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataMongoTest
+@SpringBootTest
 @Testcontainers
 class UserRepositoryTest {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0");
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
@@ -30,71 +31,91 @@ class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    private User testUser;
+    private User user1;
+    private User user2;
+    private User operator;
 
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
         
-        testUser = new User();
-        testUser.setUsername("testuser");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password123");
+        user1 = new User("user1", "user1@example.com", "password123");
+        user2 = new User("user2", "user2@example.com", "password123");
+        operator = new User("operator", "operator@example.com", "password123", true);
+        
+        userRepository.save(user1);
+        userRepository.save(user2);
+        userRepository.save(operator);
     }
 
     @Test
-    void whenSaveUser_thenUserIsSaved() {
-        User savedUser = userRepository.save(testUser);
-        
-        assertThat(savedUser.getId()).isNotNull();
-        assertThat(savedUser.getUsername()).isEqualTo(testUser.getUsername());
-        assertThat(savedUser.getEmail()).isEqualTo(testUser.getEmail());
-    }
-
-    @Test
-    void whenFindByEmail_thenUserIsFound() {
-        userRepository.save(testUser);
-        
-        Optional<User> found = userRepository.findByEmail("test@example.com");
-        
+    void whenFindByEmail_thenReturnUser() {
+        Optional<User> found = userRepository.findByEmail("user1@example.com");
         assertThat(found).isPresent();
-        assertThat(found.get().getUsername()).isEqualTo(testUser.getUsername());
+        assertThat(found.get().getUsername()).isEqualTo("user1");
     }
 
     @Test
-    void whenFindByUsername_thenUserIsFound() {
-        userRepository.save(testUser);
-        
-        Optional<User> found = userRepository.findByUsername("testuser");
-        
+    void whenFindByUsername_thenReturnUser() {
+        Optional<User> found = userRepository.findByUsername("user1");
         assertThat(found).isPresent();
-        assertThat(found.get().getEmail()).isEqualTo(testUser.getEmail());
+        assertThat(found.get().getEmail()).isEqualTo("user1@example.com");
     }
 
     @Test
-    void whenCheckExistsByEmail_thenReturnsTrue() {
-        userRepository.save(testUser);
+    void whenFindByEmailOrUsername_thenReturnUser() {
+        Optional<User> foundByEmail = userRepository.findByEmailOrUsername("user1@example.com");
+        Optional<User> foundByUsername = userRepository.findByEmailOrUsername("user1");
         
-        boolean exists = userRepository.existsByEmail("test@example.com");
-        
-        assertThat(exists).isTrue();
+        assertThat(foundByEmail).isPresent();
+        assertThat(foundByUsername).isPresent();
+        assertThat(foundByEmail.get().getId()).isEqualTo(foundByUsername.get().getId());
     }
 
     @Test
-    void whenCheckExistsByUsername_thenReturnsTrue() {
-        userRepository.save(testUser);
-        
-        boolean exists = userRepository.existsByUsername("testuser");
-        
-        assertThat(exists).isTrue();
+    void whenFindByIsOperatorTrue_thenReturnOnlyOperators() {
+        List<User> operators = userRepository.findByIsOperatorTrue();
+        assertThat(operators).hasSize(1);
+        assertThat(operators.get(0).getUsername()).isEqualTo("operator");
     }
 
     @Test
-    void whenDeleteUser_thenUserIsRemoved() {
-        User savedUser = userRepository.save(testUser);
-        
-        userRepository.deleteById(savedUser.getId());
-        
-        assertThat(userRepository.findById(savedUser.getId())).isEmpty();
+    void whenFindByIsOperatorFalse_thenReturnOnlyNonOperators() {
+        List<User> nonOperators = userRepository.findByIsOperatorFalse();
+        assertThat(nonOperators).hasSize(2);
+        assertThat(nonOperators).extracting(User::getUsername)
+            .containsExactlyInAnyOrder("user1", "user2");
+    }
+
+    @Test
+    void whenFindByUsernameContainingIgnoreCase_thenReturnMatchingUsers() {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase("user");
+        assertThat(users).hasSize(2);
+        assertThat(users).extracting(User::getUsername)
+            .containsExactlyInAnyOrder("user1", "user2");
+    }
+
+    @Test
+    void whenFindByEmailContainingIgnoreCase_thenReturnMatchingUsers() {
+        List<User> users = userRepository.findByEmailContainingIgnoreCase("example.com");
+        assertThat(users).hasSize(3);
+        assertThat(users).extracting(User::getEmail)
+            .containsExactlyInAnyOrder(
+                "user1@example.com",
+                "user2@example.com",
+                "operator@example.com"
+            );
+    }
+
+    @Test
+    void whenExistsByEmail_thenReturnTrue() {
+        assertThat(userRepository.existsByEmail("user1@example.com")).isTrue();
+        assertThat(userRepository.existsByEmail("nonexistent@example.com")).isFalse();
+    }
+
+    @Test
+    void whenExistsByUsername_thenReturnTrue() {
+        assertThat(userRepository.existsByUsername("user1")).isTrue();
+        assertThat(userRepository.existsByUsername("nonexistent")).isFalse();
     }
 } 
