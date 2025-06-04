@@ -1,6 +1,9 @@
 package tqs.sparkflow.user_service.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -14,14 +17,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.context.annotation.Import;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tqs.sparkflow.user_service.model.User;
-import tqs.sparkflow.user_service.repository.UserRepository;
 import tqs.sparkflow.user_service.config.TestSecurityConfig;
+import tqs.sparkflow.user_service.model.User;
+import tqs.sparkflow.user_service.service.UserService;
+import tqs.sparkflow.user_service.exception.DuplicateEmailException;
+import tqs.sparkflow.user_service.exception.ResourceNotFoundException;
 
 @WebMvcTest(UserController.class)
 @Import(TestSecurityConfig.class)
@@ -31,7 +37,7 @@ public class UserControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -46,7 +52,7 @@ public class UserControllerTest {
 
     @Test
     void whenCreateUser_thenReturnCreatedUser() throws Exception {
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userService.createUser(any(User.class))).thenReturn(testUser);
 
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -69,7 +75,8 @@ public class UserControllerTest {
 
     @Test
     void whenCreateUserWithExistingEmail_thenReturnConflict() throws Exception {
-        when(userRepository.existsByEmail(testUser.getEmail())).thenReturn(true);
+        when(userService.createUser(any(User.class)))
+            .thenThrow(new DuplicateEmailException("Email already exists"));
 
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +86,7 @@ public class UserControllerTest {
 
     @Test
     void whenGetUserById_thenReturnUser() throws Exception {
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
+        when(userService.getUserById("1")).thenReturn(testUser);
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
@@ -90,7 +97,7 @@ public class UserControllerTest {
 
     @Test
     void whenGetUserByEmail_thenReturnUser() throws Exception {
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(userService.getUserByEmail("test@example.com")).thenReturn(testUser);
 
         mockMvc.perform(get("/api/users/email/test@example.com"))
                 .andExpect(status().isOk())
@@ -104,8 +111,7 @@ public class UserControllerTest {
         User updatedUser = new User("updateduser", "test@example.com", "newpassword");
         updatedUser.setId("1");
         
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        when(userService.updateUser(eq("1"), any(User.class))).thenReturn(updatedUser);
 
         mockMvc.perform(put("/api/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -119,8 +125,6 @@ public class UserControllerTest {
         User invalidUser = new User("", "invalid-email", "123");
         invalidUser.setId("1");
 
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-
         mockMvc.perform(put("/api/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidUser)))
@@ -129,7 +133,7 @@ public class UserControllerTest {
 
     @Test
     void whenDeleteUser_thenReturnNoContent() throws Exception {
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
+        doNothing().when(userService).deleteUser("1");
 
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
@@ -138,7 +142,7 @@ public class UserControllerTest {
     @Test
     void whenGetAllUsers_thenReturnUserList() throws Exception {
         List<User> users = Arrays.asList(testUser);
-        when(userRepository.findAll()).thenReturn(users);
+        when(userService.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -149,7 +153,8 @@ public class UserControllerTest {
 
     @Test
     void whenGetUserByIdNotFound_thenReturnNotFound() throws Exception {
-        when(userRepository.findById("1")).thenReturn(Optional.empty());
+        when(userService.getUserById("1"))
+            .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isNotFound());
@@ -157,7 +162,8 @@ public class UserControllerTest {
 
     @Test
     void whenGetUserByEmailNotFound_thenReturnNotFound() throws Exception {
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        when(userService.getUserByEmail("nonexistent@example.com"))
+            .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/users/email/nonexistent@example.com"))
                 .andExpect(status().isNotFound());
@@ -165,7 +171,8 @@ public class UserControllerTest {
 
     @Test
     void whenUpdateUserNotFound_thenReturnNotFound() throws Exception {
-        when(userRepository.findById("1")).thenReturn(Optional.empty());
+        when(userService.updateUser(eq("1"), any(User.class)))
+            .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(put("/api/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -175,7 +182,8 @@ public class UserControllerTest {
 
     @Test
     void whenDeleteUserNotFound_thenReturnNotFound() throws Exception {
-        when(userRepository.findById("1")).thenReturn(Optional.empty());
+        doThrow(new ResourceNotFoundException("User not found"))
+            .when(userService).deleteUser("1");
 
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNotFound());
@@ -183,15 +191,12 @@ public class UserControllerTest {
 
     @Test
     void whenUpdateUserWithExistingEmail_thenReturnConflict() throws Exception {
-        User existingUser = new User("existinguser", "existing@example.com", "password123");
-        existingUser.setId("2");
-        
-        when(userRepository.findById("1")).thenReturn(Optional.of(testUser));
-        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
+        when(userService.updateUser(eq("1"), any(User.class)))
+            .thenThrow(new DuplicateEmailException("Email already exists"));
 
         mockMvc.perform(put("/api/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(existingUser)))
+                .content(objectMapper.writeValueAsString(testUser)))
                 .andExpect(status().isConflict());
     }
 } 
