@@ -3,7 +3,6 @@ package tqs.sparkflow.userservice.cucumber.steps;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.context.annotation.Import;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.WebConfig;
 import tqs.sparkflow.userservice.UserServiceApplication;

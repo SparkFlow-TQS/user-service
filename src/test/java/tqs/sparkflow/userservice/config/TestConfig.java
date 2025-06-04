@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
@@ -42,7 +42,7 @@ public class TestConfig {
     public UserDetailsService userDetailsService() {
         UserDetails testUser = User.builder()
             .username("test")
-            .password("test")
+            .password(passwordEncoder().encode("test"))
             .roles("ADMIN")
             .build();
 
@@ -52,6 +52,6 @@ public class TestConfig {
     @Bean
     @Primary
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 } 

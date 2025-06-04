@@ -7,8 +7,7 @@ import io.cucumber.datatable.DataTable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.core.ParameterizedTypeReference;
 import io.cucumber.java.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -237,15 +235,16 @@ public class UserSteps {
         logger.info("Delete response status: {}", deleteResponse.getStatusCode());
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        // Store the response in the class field (cast to ResponseEntity<String> if needed elsewhere)
-        this.response = (ResponseEntity) deleteResponse;
+        // Store the response in the class field
+        this.response = ResponseEntity.status(deleteResponse.getStatusCode()).build();
     }
 
     private String getUserIdByUsername(String username) {
         try {
-            ResponseEntity<List> usersResponse = restTemplate
+            ResponseEntity<List<Map<String, Object>>> usersResponse = restTemplate
                 .withBasicAuth("test", "test")
-                .getForEntity(baseUrl + "/api/v1/users", List.class);
+                .exchange(baseUrl + "/api/v1/users", HttpMethod.GET, null, 
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
 
             if (usersResponse.getStatusCode() != HttpStatus.OK) {
                 logger.error("Failed to fetch users. Status: {}, Body: {}", 

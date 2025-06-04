@@ -15,7 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import tqs.sparkflow.userservice.service.UserService;
 import tqs.sparkflow.userservice.repository.UserRepository;
@@ -61,7 +61,7 @@ public class CucumberTestConfig {
   public UserDetailsService userDetailsService() {
     UserDetails admin = User.builder()
         .username("test")
-        .password("test")
+        .password(passwordEncoder().encode("test"))
         .roles("ADMIN")
         .build();
 
@@ -71,7 +71,7 @@ public class CucumberTestConfig {
   @Bean
   @Primary
   public PasswordEncoder passwordEncoder() {
-    return NoOpPasswordEncoder.getInstance();
+    return new BCryptPasswordEncoder();
   }
 
   @Bean
