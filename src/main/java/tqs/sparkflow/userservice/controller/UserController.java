@@ -49,9 +49,9 @@ public class UserController {
   @Operation(summary = "Create a new user", description = "Creates a new user with the provided details")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "User created successfully",
-      content = @Content(schema = @Schema(implementation = User.class))),
-    @ApiResponse(responseCode = "409", description = "Email already exists"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data")
+        content = @Content(schema = @Schema(implementation = User.class))),
+      @ApiResponse(responseCode = "409", description = "Email already exists"),
+      @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping
   public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDTO userDTO) {
@@ -72,9 +72,9 @@ public class UserController {
    */
   @Operation(summary = "Get user by ID", description = "Retrieves a user by their unique identifier")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "User found",
-      content = @Content(schema = @Schema(implementation = User.class))),
-    @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "200", description = "User found",
+        content = @Content(schema = @Schema(implementation = User.class))),
+      @ApiResponse(responseCode = "404", description = "User not found")
   })
   @GetMapping("/{id}")
   public ResponseEntity<User> getUserById(
@@ -122,11 +122,11 @@ public class UserController {
    */
   @Operation(summary = "Update user", description = "Updates an existing user's details")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "User updated successfully",
+      @ApiResponse(responseCode = "200", description = "User updated successfully",
         content = @Content(schema = @Schema(implementation = User.class))),
-    @ApiResponse(responseCode = "404", description = "User not found"),
-    @ApiResponse(responseCode = "409", description = "Email already exists"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data")
+      @ApiResponse(responseCode = "404", description = "User not found"),
+      @ApiResponse(responseCode = "409", description = "Email already exists"),
+      @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PutMapping("/{id}")
   public ResponseEntity<User> updateUser(

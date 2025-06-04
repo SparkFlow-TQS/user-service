@@ -1,5 +1,8 @@
 package tqs.sparkflow.userservice.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
@@ -8,9 +11,6 @@ import tqs.sparkflow.userservice.dto.UserCreateDTO;
 import tqs.sparkflow.userservice.dto.UserUpdateDTO;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Service layer for managing users.
