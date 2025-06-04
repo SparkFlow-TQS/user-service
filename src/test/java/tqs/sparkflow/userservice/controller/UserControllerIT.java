@@ -29,7 +29,10 @@ import tqs.sparkflow.userservice.repository.UserRepository;
         TestConfig.class,
         TestcontainersConfiguration.class
     },
-    properties = {"spring.main.allow-bean-definition-overriding=true"}
+    properties = {
+        "spring.main.allow-bean-definition-overriding=true",
+        "spring.data.mongodb.auto-index-creation=true"
+    }
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
