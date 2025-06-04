@@ -58,10 +58,10 @@ public class CucumberTestConfig {
 
   @Bean
   @Primary
-  public UserDetailsService userDetailsService() {
+  public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
     UserDetails admin = User.builder()
         .username("test")
-        .password(passwordEncoder().encode("test"))
+        .password(passwordEncoder.encode("test"))
         .roles("ADMIN")
         .build();
 
