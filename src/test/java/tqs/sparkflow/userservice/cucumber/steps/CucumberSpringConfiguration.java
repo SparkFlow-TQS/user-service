@@ -9,7 +9,6 @@ import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.cucumber.CucumberTestConfig;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import tqs.sparkflow.userservice.cucumber.steps.AbstractMongoTest;
 
 @CucumberContextConfiguration
 @SpringBootTest(
