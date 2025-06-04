@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.repository;
+package tqs.sparkflow.userservice.repository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import tqs.sparkflow.user_service.model.User;
+import tqs.sparkflow.userservice.model.User;
 
 import java.util.List;
 import java.util.Optional;

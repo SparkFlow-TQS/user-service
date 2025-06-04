@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.controller;
+package tqs.sparkflow.userservice.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -22,11 +22,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tqs.sparkflow.user_service.config.TestSecurityConfig;
-import tqs.sparkflow.user_service.model.User;
-import tqs.sparkflow.user_service.service.UserService;
-import tqs.sparkflow.user_service.exception.DuplicateEmailException;
-import tqs.sparkflow.user_service.exception.ResourceNotFoundException;
+import tqs.sparkflow.userservice.config.TestSecurityConfig;
+import tqs.sparkflow.userservice.controller.UserController;
+import tqs.sparkflow.userservice.exception.DuplicateEmailException;
+import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
+import tqs.sparkflow.userservice.model.User;
+import tqs.sparkflow.userservice.service.UserService;
 
 @WebMvcTest(UserController.class)
 @Import(TestSecurityConfig.class)

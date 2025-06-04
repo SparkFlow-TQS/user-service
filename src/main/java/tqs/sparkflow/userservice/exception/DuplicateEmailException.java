@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.exception;
+package tqs.sparkflow.userservice.exception;
 
 public class DuplicateEmailException extends RuntimeException {
     public DuplicateEmailException(String message) {

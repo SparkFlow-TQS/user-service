@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.model;
+package tqs.sparkflow.userservice.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;

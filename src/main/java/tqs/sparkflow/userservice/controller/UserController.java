@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.controller;
+package tqs.sparkflow.userservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -7,10 +7,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import tqs.sparkflow.user_service.exception.DuplicateEmailException;
-import tqs.sparkflow.user_service.exception.ResourceNotFoundException;
-import tqs.sparkflow.user_service.model.User;
-import tqs.sparkflow.user_service.service.UserService;
+import tqs.sparkflow.userservice.model.User;
+import tqs.sparkflow.userservice.exception.DuplicateEmailException;
+import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
+import tqs.sparkflow.userservice.service.UserService;
 
 import java.util.List;
 

@@ -1,8 +1,10 @@
-package tqs.sparkflow.user_service.model;
+package tqs.sparkflow.userservice.model;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import tqs.sparkflow.userservice.model.User;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

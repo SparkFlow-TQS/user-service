@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.exception;
+package tqs.sparkflow.userservice.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

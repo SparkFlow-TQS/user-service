@@ -1,9 +1,10 @@
-package tqs.sparkflow.user_service.repository;
+package tqs.sparkflow.userservice.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import tqs.sparkflow.user_service.model.User;
+
+import tqs.sparkflow.userservice.model.User;
 
 import java.util.List;
 import java.util.Optional;

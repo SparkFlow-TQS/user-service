@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.config;
+package tqs.sparkflow.userservice.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;

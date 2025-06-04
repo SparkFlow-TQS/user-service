@@ -1,12 +1,12 @@
-package tqs.sparkflow.user_service.service;
+package tqs.sparkflow.userservice.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import tqs.sparkflow.user_service.exception.DuplicateEmailException;
-import tqs.sparkflow.user_service.exception.ResourceNotFoundException;
-import tqs.sparkflow.user_service.model.User;
-import tqs.sparkflow.user_service.repository.UserRepository;
+import tqs.sparkflow.userservice.exception.DuplicateEmailException;
+import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
+import tqs.sparkflow.userservice.model.User;
+import tqs.sparkflow.userservice.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
