@@ -1,34 +1,13 @@
 services:
   user-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      user-db:
-        condition: service_healthy
-    networks:
-      - sparkflow-network
-    environment:
-      - APP_PORT=${APP_PORT}
-      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
-      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+      - user-db
 
   user-db:
-    image: mongo:7.0
-    environment:
-      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    image: mongo:8.0.5
     volumes:
-      - user-db-data:/data/db
-    networks:
-      - sparkflow-network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - ./user-mongodb-data:/data/db
 
-networks:
-  sparkflow-network:
-    name: sparkflow-network
-
-volumes:
-  user-db-data: 
