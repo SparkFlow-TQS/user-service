@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.Valid;
 import tqs.sparkflow.userservice.model.User;
+import tqs.sparkflow.userservice.dto.UserCreateDTO;
+import tqs.sparkflow.userservice.dto.UserUpdateDTO;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.service.UserService;
@@ -38,7 +40,7 @@ public class UserController {
     /**
      * Creates a new user.
      *
-     * @param user the user to create
+     * @param userDTO the user data to create
      * @return the created user with HTTP 201 status
      * @throws DuplicateEmailException if the email already exists
      */
@@ -50,9 +52,9 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDTO userDTO) {
         try {
-            User savedUser = userService.createUser(user);
+            User savedUser = userService.createUser(userDTO);
             return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
         } catch (DuplicateEmailException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -127,7 +129,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(
             @Parameter(description = "ID of the user to update") @PathVariable String id,
-            @Valid @RequestBody User userDetails) {
+            @Valid @RequestBody UserUpdateDTO userDetails) {
         try {
             User updatedUser = userService.updateUser(id, userDetails);
             return ResponseEntity.ok(updatedUser);

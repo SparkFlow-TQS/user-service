@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.model.User;
+import tqs.sparkflow.userservice.dto.UserCreateDTO;
+import tqs.sparkflow.userservice.dto.UserUpdateDTO;
 import tqs.sparkflow.userservice.repository.UserRepository;
 
 import java.util.List;
@@ -24,14 +26,21 @@ public class UserService {
   /**
    * Creates a new user.
    *
-   * @param user the user to create
+   * @param userDTO the user data to create
    * @return the created user
    * @throws DuplicateEmailException if the email already exists
    */
-  public User createUser(User user) {
-    if (userRepository.existsByEmail(user.getEmail())) {
-      throw new DuplicateEmailException("Email already exists: " + user.getEmail());
+  public User createUser(UserCreateDTO userDTO) {
+    if (userRepository.existsByEmail(userDTO.getEmail())) {
+      throw new DuplicateEmailException("Email already exists: " + userDTO.getEmail());
     }
+    
+    User user = new User();
+    user.setUsername(userDTO.getUsername());
+    user.setEmail(userDTO.getEmail());
+    user.setPassword(userDTO.getPassword());
+    user.setOperator(userDTO.isOperator());
+    
     return userRepository.save(user);
   }
 
@@ -68,7 +77,7 @@ public class UserService {
    * @throws ResourceNotFoundException if the user is not found
    * @throws DuplicateEmailException if the new email already exists
    */
-  public User updateUser(String id, User userDetails) {
+  public User updateUser(String id, UserUpdateDTO userDetails) {
     User existingUser = getUserById(id);
 
     // Check if the new email is already taken by another user
