@@ -10,6 +10,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import tqs.sparkflow.userservice.service.UserService;
 import tqs.sparkflow.userservice.repository.UserRepository;
 
@@ -34,12 +41,37 @@ public class CucumberTestConfig {
   }
 
   @Bean
+  @Primary
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .headers(headers -> headers.disable())
-        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/v1/users", "/api/v1/users/**").hasRole("ADMIN")
+            .anyRequest().permitAll()
+        )
+        .httpBasic(httpBasic -> {});
+    
     return http.build();
+  }
+
+  @Bean
+  @Primary
+  public UserDetailsService userDetailsService() {
+    UserDetails admin = User.builder()
+        .username("test")
+        .password("test")
+        .roles("ADMIN")
+        .build();
+
+    return new InMemoryUserDetailsManager(admin);
+  }
+
+  @Bean
+  @Primary
+  public PasswordEncoder passwordEncoder() {
+    return NoOpPasswordEncoder.getInstance();
   }
 
   @Bean

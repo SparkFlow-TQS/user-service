@@ -3,6 +3,7 @@ package tqs.sparkflow.userservice.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,7 @@ class UserControllerIT {
         User newUser = new User("newuser", "new@example.com", "password123");
 
         MvcResult result = mockMvc.perform(post("/api/v1/users")
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newUser)))
                 .andExpect(status().isCreated())
@@ -77,6 +79,7 @@ class UserControllerIT {
         User duplicateUser = new User("anotheruser", testUser.getEmail(), "password123");
 
         mockMvc.perform(post("/api/v1/users")
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(duplicateUser)))
                 .andExpect(status().isConflict());
@@ -87,6 +90,7 @@ class UserControllerIT {
         User invalidUser = new User("", "invalid-email", "123"); // Invalid username, email, and password
 
         mockMvc.perform(post("/api/v1/users")
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidUser)))
                 .andExpect(status().isBadRequest());
@@ -94,7 +98,8 @@ class UserControllerIT {
 
     @Test
     void whenGetUserById_thenReturnUser() throws Exception {
-        mockMvc.perform(get("/api/v1/users/{id}", testUser.getId()))
+        mockMvc.perform(get("/api/v1/users/{id}", testUser.getId())
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.username").value(testUser.getUsername()))
@@ -103,7 +108,8 @@ class UserControllerIT {
 
     @Test
     void whenGetUserByEmail_thenReturnUser() throws Exception {
-        mockMvc.perform(get("/api/v1/users/email/{email}", testUser.getEmail()))
+        mockMvc.perform(get("/api/v1/users/email/{email}", testUser.getEmail())
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.username").value(testUser.getUsername()))
@@ -112,13 +118,15 @@ class UserControllerIT {
 
     @Test
     void whenGetUserByIdNotFound_thenReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/users/{id}", "nonexistent"))
+        mockMvc.perform(get("/api/v1/users/{id}", "nonexistent")
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void whenGetUserByEmailNotFound_thenReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/users/email/{email}", "nonexistent@example.com"))
+        mockMvc.perform(get("/api/v1/users/email/{email}", "nonexistent@example.com")
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isNotFound());
     }
 
@@ -128,6 +136,7 @@ class UserControllerIT {
         updatedUser.setId(testUser.getId());
 
         MvcResult result = mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isOk())
@@ -144,6 +153,7 @@ class UserControllerIT {
         updatedUser.setId(testUser.getId());
 
         MvcResult result = mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isOk())
@@ -164,6 +174,7 @@ class UserControllerIT {
         updatedUser.setId(testUser.getId());
 
         mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isConflict());
@@ -175,6 +186,7 @@ class UserControllerIT {
         invalidUser.setId(testUser.getId());
 
         mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidUser)))
                 .andExpect(status().isBadRequest());
@@ -186,6 +198,7 @@ class UserControllerIT {
         updatedUser.setId("nonexistent");
 
         mockMvc.perform(put("/api/v1/users/{id}", "nonexistent")
+                .with(httpBasic("test", "test"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isNotFound());
@@ -193,7 +206,8 @@ class UserControllerIT {
 
     @Test
     void whenDeleteUser_thenReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/v1/users/{id}", testUser.getId()))
+        mockMvc.perform(delete("/api/v1/users/{id}", testUser.getId())
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isNoContent());
 
         assertThat(userRepository.findById(testUser.getId())).isEmpty();
@@ -201,7 +215,8 @@ class UserControllerIT {
 
     @Test
     void whenDeleteUserNotFound_thenReturnNotFound() throws Exception {
-        mockMvc.perform(delete("/api/v1/users/{id}", "nonexistent"))
+        mockMvc.perform(delete("/api/v1/users/{id}", "nonexistent")
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isNotFound());
     }
 
@@ -211,7 +226,8 @@ class UserControllerIT {
         User anotherUser = new User("anotheruser", "another@example.com", "password123");
         userRepository.save(anotherUser);
 
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users")
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").value(testUser.getId()))
@@ -222,7 +238,8 @@ class UserControllerIT {
     void whenGetAllUsersEmpty_thenReturnEmptyList() throws Exception {
         userRepository.deleteAll();
 
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users")
+                .with(httpBasic("test", "test")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());

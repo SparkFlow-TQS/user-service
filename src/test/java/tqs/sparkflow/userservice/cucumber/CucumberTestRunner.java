@@ -7,6 +7,8 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
     features = "src/test/resources/features",
-    glue = "tqs.sparkflow.userservice.cucumber.steps"
+    glue = "tqs.sparkflow.userservice.cucumber.steps",
+    plugin = {"pretty", "html:target/cucumber-report.html"}
 )
-public class CucumberTestRunner {}
+public class CucumberTestRunner {
+}

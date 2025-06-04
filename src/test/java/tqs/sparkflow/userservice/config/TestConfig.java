@@ -8,7 +8,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 @TestConfiguration
 @EnableWebSecurity
@@ -19,12 +25,33 @@ public class TestConfig {
     @Primary
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(new AntPathRequestMatcher("/**")).permitAll()
-            );
+                .requestMatchers("/api/v1/users", "/api/v1/users/**").hasRole("ADMIN")
+                .anyRequest().permitAll()
+            )
+            .httpBasic(httpBasic -> {});
+        
         return http.build();
+    }
+
+    @Bean
+    @Primary
+    public UserDetailsService userDetailsService() {
+        UserDetails testUser = User.builder()
+            .username("test")
+            .password("test")
+            .roles("ADMIN")
+            .build();
+
+        return new InMemoryUserDetailsManager(testUser);
+    }
+
+    @Bean
+    @Primary
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
 } 
