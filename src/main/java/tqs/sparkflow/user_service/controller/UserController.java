@@ -19,64 +19,64 @@ import java.util.List;
 @Validated
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+  @Autowired
+  private UserService userService;
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        try {
-            User savedUser = userService.createUser(user);
-            return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
-        } catch (DuplicateEmailException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+  @PostMapping
+  public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+    try {
+      User savedUser = userService.createUser(user);
+      return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    } catch (DuplicateEmailException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
+  }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
-        try {
-            User user = userService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+  @GetMapping("/{id}")
+  public ResponseEntity<User> getUserById(@PathVariable String id) {
+    try {
+      User user = userService.getUserById(id);
+      return ResponseEntity.ok(user);
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.notFound().build();
     }
+  }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        try {
-            User user = userService.getUserByEmail(email);
-            return ResponseEntity.ok(user);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+  @GetMapping("/email/{email}")
+  public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+    try {
+      User user = userService.getUserByEmail(email);
+      return ResponseEntity.ok(user);
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.notFound().build();
     }
+  }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable String id, @Valid @RequestBody User userDetails) {
-        try {
-            User updatedUser = userService.updateUser(id, userDetails);
-            return ResponseEntity.ok(updatedUser);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (DuplicateEmailException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+  @PutMapping("/{id}")
+  public ResponseEntity<User> updateUser(@PathVariable String id, @Valid @RequestBody User userDetails) {
+    try {
+      User updatedUser = userService.updateUser(id, userDetails);
+      return ResponseEntity.ok(updatedUser);
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.notFound().build();
+    } catch (DuplicateEmailException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
+  }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        try {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+    try {
+      userService.deleteUser(id);
+      return ResponseEntity.noContent().build();
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.notFound().build();
     }
+  }
 
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
-    }
+  @GetMapping
+  public ResponseEntity<List<User>> getAllUsers() {
+    List<User> users = userService.getAllUsers();
+    return ResponseEntity.ok(users);
+  }
 } 

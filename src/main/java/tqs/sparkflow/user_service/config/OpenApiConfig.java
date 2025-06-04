@@ -2,7 +2,6 @@ package tqs.sparkflow.user_service.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
   /**
-   * Creates and configures the OpenAPI documentation for the Station Service.
+   * Creates and configures the OpenAPI documentation for the User Service.
    *
    * @return configured OpenAPI instance with API information
    */
@@ -25,8 +24,6 @@ public class OpenApiConfig {
         .title("User Service API")
         .version("0.0.1")
         .description("API for managing users")
-        .license(new License()
-          .name("Apache 2.0")
-          .url("http://www.apache.org/licenses/LICENSE-2.0.html")));
+      );
   }
 } 

@@ -17,36 +17,36 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class User {
     
-    @Id
-    private String id;
+  @Id
+  private String id;
 
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-    private String username;
+  @NotBlank(message = "Username is required")
+  @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+  private String username;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Indexed(unique = true)
-    private String email;
+  @NotBlank(message = "Email is required")
+  @Email(message = "Email should be valid")
+  @Indexed(unique = true)
+  private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
-    private String password;
+  @NotBlank(message = "Password is required")
+  @Size(min = 6, message = "Password must be at least 6 characters")
+  private String password;
 
-    @Field("is_operator")
-    private boolean isOperator;
-
-    public User(String username, String email, String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.isOperator = false;
-    }
-
-    public User(String username, String email, String password, boolean isOperator) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.isOperator = isOperator;
-    }
+  @Field("is_operator")
+  private boolean isOperator;
+   
+  public User(String username, String email, String password) {
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.isOperator = false;
+  }
+   
+  public User(String username, String email, String password, boolean isOperator) {
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.isOperator = isOperator;
+  }
 } 
