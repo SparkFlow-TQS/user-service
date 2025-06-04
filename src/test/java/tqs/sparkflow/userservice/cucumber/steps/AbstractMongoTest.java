@@ -10,7 +10,7 @@ import org.springframework.test.context.DynamicPropertySource;
 public abstract class AbstractMongoTest {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
+    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
