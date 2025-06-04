@@ -1,6 +1,5 @@
 package tqs.sparkflow.userservice.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
@@ -20,8 +19,11 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-  @Autowired
-  private UserRepository userRepository;
+  private final UserRepository userRepository;
+
+  public UserService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
   /**
    * Creates a new user.

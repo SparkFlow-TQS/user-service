@@ -48,47 +48,53 @@ class UserTest {
     void whenUsernameIsBlank_thenValidationFails() {
         user.setUsername("");
         var violations = validator.validate(user);
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+        assertThat(violations)
+            .isNotEmpty()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("username"));
     }
 
     @Test
     void whenUsernameIsTooShort_thenValidationFails() {
         user.setUsername("ab");
         var violations = validator.validate(user);
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+        assertThat(violations)
+            .isNotEmpty()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("username"));
     }
 
     @Test
     void whenUsernameIsTooLong_thenValidationFails() {
         user.setUsername("a".repeat(51));
         var violations = validator.validate(user);
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+        assertThat(violations)
+            .isNotEmpty()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("username"));
     }
 
     @Test
     void whenEmailIsBlank_thenValidationFails() {
         user.setEmail("");
         var violations = validator.validate(user);
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("email"));
+        assertThat(violations)
+            .isNotEmpty()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("email"));
     }
 
     @Test
     void whenPasswordIsTooShort_thenValidationFails() {
         user.setPassword("12345");
         var violations = validator.validate(user);
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("password"));
+        assertThat(violations)
+            .isNotEmpty()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
     }
 
     @Test
     void whenPasswordIsBlank_thenValidationFails() {
         user.setPassword("");
         var violations = validator.validate(user);
-        assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("password"));
+        assertThat(violations)
+            .isNotEmpty()
+            .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
     }
 } 
