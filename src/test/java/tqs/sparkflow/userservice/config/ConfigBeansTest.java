@@ -1,4 +1,4 @@
-package tqs.sparkflow.user_service.config;
+package tqs.sparkflow.userservice.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,6 +8,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest

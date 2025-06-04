@@ -52,6 +52,10 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
@@ -85,25 +89,6 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mongodb</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- Cucumber Dependencies -->
-		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-java</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-spring</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-junit-platform-engine</artifactId>
-			<version>${cucumber.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- REST Assured -->
@@ -191,13 +176,71 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Xray Dependencies -->
+		<dependency>
+			<groupId>app.getxray</groupId>
+			<artifactId>xray-junit-extensions</artifactId>
+			<version>0.9.0</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Cucumber Dependencies -->
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-java</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-spring</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-junit</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>3.1.1</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 			<!-- SonarQube Maven Plugin -->
 			<plugin>
@@ -233,10 +276,29 @@
 				<configuration>
 					<includes>
 						<include>**/*Test.java</include>
-						<include>**/*Tests.java</include>
-						<include>**/*Suite.java</include>
 					</includes>
-					<useModulePath>false</useModulePath>
+					<reportsDirectories>
+						<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+					</reportsDirectories>
+					<reportFormat>xml</reportFormat>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.5.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<includes>
+						<include>**/*IT.java</include>
+					</includes>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -251,6 +313,9 @@
 					<linkXRef>false</linkXRef>
 					<maxAllowedViolations>0</maxAllowedViolations>
 					<violationSeverity>error</violationSeverity>
+					<sourceDirectories>
+						<sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+					</sourceDirectories>
 				</configuration>
 				<executions>
 					<execution>
@@ -262,7 +327,39 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>12.1.1</version>
+				<configuration>
+					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
+				</configuration>
+			</plugin>
+			<!-- Xray Maven Plugin -->
+			<plugin>
+				<groupId>app.getxray</groupId>
+				<artifactId>xray-maven-plugin</artifactId>
+				<version>0.9.0</version>
+				<configuration>
+					<clientId>${XRAY_CLIENT_ID}</clientId>
+					<clientSecret>${XRAY_CLIENT_SECRET}</clientSecret>
+					<cloud>true</cloud>
+					<projectKey>${XRAY_PROJECT_KEY}</projectKey>
+					<reportFormat>junit</reportFormat>
+					<reportFile>${project.build.directory}/surefire-reports</reportFile>
+					<autoCreateTests>true</autoCreateTests>
+					<autoCreateTestsLabels>automated</autoCreateTestsLabels>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
+
+	<repositories>
+		<repository>
+			<id>xray</id>
+			<name>Xray Repository</name>
+			<url>https://packages.atlassian.com/maven/repository/public</url>
+		</repository>
+	</repositories>
 
 </project> 
