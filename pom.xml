@@ -106,7 +106,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.cucumber</groupId>
-			<artifactId>cucumber-junit-platform-engine</artifactId>
+			<artifactId>cucumber-junit</artifactId>
 			<version>${cucumber.version}</version>
 			<scope>test</scope>
 		</dependency>
@@ -210,6 +210,30 @@
 			<groupId>app.getxray</groupId>
 			<artifactId>xray-junit-extensions</artifactId>
 			<version>0.9.0</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Cucumber Dependencies -->
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-java</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-spring</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.cucumber</groupId>
+			<artifactId>cucumber-junit</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
