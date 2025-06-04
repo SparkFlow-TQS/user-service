@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +24,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tqs.sparkflow.userservice.UserServiceApplication;
+import tqs.sparkflow.userservice.TestcontainersConfiguration;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
 
 @SpringBootTest(
-    classes = {UserServiceApplication.class, TestConfig.class},
+    classes = {
+        UserServiceApplication.class,
+        TestConfig.class,
+        TestcontainersConfiguration.class
+    },
     properties = {"spring.main.allow-bean-definition-overriding=true"}
 )
 @AutoConfigureMockMvc
@@ -36,14 +43,25 @@ import tqs.sparkflow.userservice.repository.UserRepository;
 class UserControllerIT {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2")
+    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2")
         .withReuse(true);
+
+    @BeforeAll
+    static void beforeAll() {
+        mongoDBContainer.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        if (mongoDBContainer.isRunning()) {
+            mongoDBContainer.stop();
+        }
+    }
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
         registry.add("spring.data.mongodb.database", () -> "test");
-        registry.add("spring.data.mongodb.auto-index-creation", () -> true);
     }
 
     @Autowired

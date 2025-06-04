@@ -19,7 +19,6 @@ import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
-import tqs.sparkflow.userservice.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {

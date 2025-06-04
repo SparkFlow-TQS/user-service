@@ -12,8 +12,8 @@ import org.springframework.lang.NonNull;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void configurePathMatch(@NonNull PathMatchConfigurer configurer) {
-        configurer.addPathPrefix("/api/v1", c -> true);
-    }
+  @Override
+  public void configurePathMatch(@NonNull PathMatchConfigurer configurer) {
+    configurer.addPathPrefix("/api/v1", c -> true);
+  }
 } 

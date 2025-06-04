@@ -9,9 +9,6 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import tqs.sparkflow.userservice.config.OpenApiConfig;
-import tqs.sparkflow.userservice.config.SecurityConfig;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest

@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.WebConfig;
-import tqs.sparkflow.userservice.controller.UserController;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.model.User;
