@@ -15,7 +15,7 @@ import tqs.sparkflow.userservice.service.UserService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @Validated
 public class UserController {
 
