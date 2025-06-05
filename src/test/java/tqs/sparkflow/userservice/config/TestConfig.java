@@ -5,30 +5,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.SecurityFilterChain;
 
 @TestConfiguration
-@EnableWebSecurity
 @Profile("test")
-public class TestConfig {
+public class TestConfig extends SecurityConfig {
 
     @Bean
     @Primary
+    @Override
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(csrf -> csrf.disable())
             .headers(headers -> headers.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/users", "/api/v1/users/**").hasRole("ADMIN")
@@ -41,19 +34,13 @@ public class TestConfig {
 
     @Bean
     @Primary
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+    public UserDetailsService userDetailsService() {
         UserDetails testUser = User.builder()
             .username("test")
-            .password(passwordEncoder.encode("test"))
+            .password(passwordEncoder().encode("test"))
             .roles("ADMIN")
             .build();
 
         return new InMemoryUserDetailsManager(testUser);
-    }
-
-    @Bean
-    @Primary
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 } 
