@@ -3,11 +3,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    environment:
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     depends_on:
-      - user-db
+      user-db:
+        condition: service_healthy
 
   user-db:
     image: mongo:8.0.5
-    volumes:
-      - ./user-mongodb-data:/data/db
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  user-db-data:
 

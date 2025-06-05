@@ -19,8 +19,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tqs.sparkflow.userservice.UserServiceApplication;
-import tqs.sparkflow.userservice.TestcontainersConfiguration;
 import tqs.sparkflow.userservice.config.TestConfig;
+import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
 

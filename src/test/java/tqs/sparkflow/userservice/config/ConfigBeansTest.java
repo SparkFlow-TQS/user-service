@@ -8,10 +8,17 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import tqs.sparkflow.userservice.UserServiceApplication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(
+    classes = {
+        UserServiceApplication.class,
+        TestConfig.class,
+        TestcontainersConfiguration.class
+    }
+)  
 @Testcontainers
 class ConfigBeansTest {
 
