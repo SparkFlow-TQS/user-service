@@ -15,6 +15,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @TestConfiguration
 @EnableWebSecurity
@@ -29,6 +30,7 @@ public class TestConfig {
             .headers(headers -> headers.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/users", "/api/v1/users/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
             )

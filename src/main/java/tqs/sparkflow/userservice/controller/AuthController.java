@@ -17,11 +17,13 @@ import tqs.sparkflow.userservice.dto.LoginDTO;
 import tqs.sparkflow.userservice.dto.RegisterDTO;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
+import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
+import tqs.sparkflow.userservice.exception.ValidationException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.service.AuthService;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @Validated
 @Tag(name = "Authentication", description = "APIs for user authentication")
 public class AuthController {
@@ -46,6 +48,8 @@ public class AuthController {
             return ResponseEntity.ok(user);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -63,6 +67,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (DuplicateEmailException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (DuplicateUsernameException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 } 
