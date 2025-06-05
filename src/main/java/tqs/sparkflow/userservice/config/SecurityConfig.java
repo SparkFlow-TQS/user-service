@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,6 +20,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
   /**
    * Configures the security filter chain for the application.
@@ -97,6 +104,8 @@ public class SecurityConfig {
         )
         .permitAll()
         .requestMatchers("/actuator/**", "/actuator/health/**")
+        .permitAll()
+        .requestMatchers("/api/v1/auth/**")
         .permitAll()
         .anyRequest()
         .authenticated()

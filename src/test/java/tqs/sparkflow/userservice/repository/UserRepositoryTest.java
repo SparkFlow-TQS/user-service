@@ -10,13 +10,22 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.sparkflow.userservice.model.User;
+import tqs.sparkflow.userservice.UserServiceApplication;
+import tqs.sparkflow.userservice.config.TestConfig;
+import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(
+    classes = {
+        UserServiceApplication.class,
+        TestConfig.class,
+        TestcontainersConfiguration.class
+    }
+)
 @Testcontainers
 class UserRepositoryTest {
 
