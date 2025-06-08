@@ -3,7 +3,7 @@ package tqs.sparkflow.userservice.exception;
 /**
  * Exception thrown when a duplicate email is found.
  */
-public class DuplicateEmailException extends RuntimeException {
+public class DuplicateEmailException extends BaseUserServiceException {
   /**
    * Constructor with message.
    *

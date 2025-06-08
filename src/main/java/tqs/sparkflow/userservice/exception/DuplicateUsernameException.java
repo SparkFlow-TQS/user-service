@@ -3,7 +3,7 @@ package tqs.sparkflow.userservice.exception;
 /**
  * Exception thrown when a duplicate username is found.
  */
-public class DuplicateUsernameException extends RuntimeException {
+public class DuplicateUsernameException extends BaseUserServiceException {
   /**
    * Constructor with message.
    *

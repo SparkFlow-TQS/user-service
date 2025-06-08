@@ -3,7 +3,7 @@ package tqs.sparkflow.userservice.exception;
 /**
  * Exception thrown when authentication fails.
  */
-public class AuthenticationException extends RuntimeException {
+public class AuthenticationException extends BaseUserServiceException {
   /**
    * Constructor with message.
    *

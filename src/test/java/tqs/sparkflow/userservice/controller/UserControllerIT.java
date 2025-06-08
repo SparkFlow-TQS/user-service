@@ -353,4 +353,68 @@ class UserControllerIT {
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
+
+    @Test
+    void whenGetProfileAsOperator_thenReturnProfileInfo() throws Exception {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/profile")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("operator"))
+            .body("authenticated", equalTo(true));
+    }
+
+    @Test
+    void whenGetProfileAsUser_thenReturnProfileInfo() throws Exception {
+        userRequestSpec
+        .when()
+            .get("/api/v1/users/profile")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("testuser"))
+            .body("authenticated", equalTo(true));
+    }
+
+    @Test
+    void whenAccessTestEndpointAsOperator_thenReturnTestMessage() throws Exception {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/test")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("message", equalTo("Access granted to protected endpoint"))
+            .body("user", equalTo("operator"));
+    }
+
+    @Test
+    void whenAccessTestEndpointAsUser_thenReturnTestMessage() throws Exception {
+        userRequestSpec
+        .when()
+            .get("/api/v1/users/test")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("message", equalTo("Access granted to protected endpoint"))
+            .body("user", equalTo("testuser"));
+    }
+
+    @Test
+    void whenAccessProfileWithoutAuthentication_thenReturnUnauthorized() throws Exception {
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when()
+            .get("/api/v1/users/profile")
+        .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void whenAccessTestEndpointWithoutAuthentication_thenReturnUnauthorized() throws Exception {
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when()
+            .get("/api/v1/users/test")
+        .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
 } 

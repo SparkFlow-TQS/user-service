@@ -13,6 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import tqs.sparkflow.userservice.repository.UserRepository;
+import tqs.sparkflow.userservice.model.User;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,12 @@ public class UserSteps {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private ResponseEntity<String> response;
     private String userJson;
@@ -63,26 +72,13 @@ public class UserSteps {
 
     @Given("I am an authenticated administrator")
     public void i_am_an_authenticated_administrator() {
-        // Create an operator user and get JWT token
+        // Create an operator user directly in the database and get JWT token
         try {
-            // First, create an operator user via the registration endpoint
-            String registerJson = """
-            {
-                "username": "admin",
-                "email": "admin@example.com",
-                "password": "password123",
-                "operator": true
-            }
-            """;
-            
-            HttpHeaders registerHeaders = new HttpHeaders();
-            registerHeaders.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> registerRequest = new HttpEntity<>(registerJson, registerHeaders);
-            
-            // Register the operator user
-            ResponseEntity<String> registerResponse = restTemplate.postForEntity(
-                baseUrl + "/api/v1/auth/register", registerRequest, String.class);
-            logger.info("Register response - Status: {}", registerResponse.getStatusCode());
+            // Create operator user directly in database (like integration tests do)
+            User operatorUser = new User("admin", "admin@example.com", 
+                passwordEncoder.encode("password123"), true);
+            userRepository.save(operatorUser);
+            logger.info("Created operator user directly in database");
             
             // Now login to get JWT token
             String loginJson = """
