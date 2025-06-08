@@ -57,7 +57,7 @@ class AuthControllerTest {
             http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/auth/**").permitAll()
                     .anyRequest().authenticated()
                 );
             return http.build();
@@ -88,7 +88,7 @@ class AuthControllerTest {
             testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
         when(authService.login(any(LoginDto.class))).thenReturn(jwtResponse);
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())
@@ -103,7 +103,7 @@ class AuthControllerTest {
     void whenLoginWithInvalidCredentials_thenReturnUnauthorized() throws Exception {
         when(authService.login(any(LoginDto.class))).thenThrow(new AuthenticationException("Invalid credentials"));
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isUnauthorized());
@@ -113,7 +113,7 @@ class AuthControllerTest {
     void whenLoginWithInvalidData_thenReturnBadRequest() throws Exception {
         when(authService.login(any(LoginDto.class))).thenThrow(new ValidationException("Invalid input data"));
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isBadRequest());
@@ -123,7 +123,7 @@ class AuthControllerTest {
     void whenRegisterWithValidData_thenReturnCreatedUser() throws Exception {
         when(authService.register(any(RegisterDto.class))).thenReturn(testUser);
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDTO)))
                 .andExpect(status().isCreated())
@@ -136,7 +136,7 @@ class AuthControllerTest {
     void whenRegisterWithExistingEmail_thenReturnConflict() throws Exception {
         when(authService.register(any(RegisterDto.class))).thenThrow(new DuplicateEmailException("Email already exists"));
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDTO)))
                 .andExpect(status().isConflict());
@@ -146,7 +146,7 @@ class AuthControllerTest {
     void whenRegisterWithInvalidData_thenReturnBadRequest() throws Exception {
         when(authService.register(any(RegisterDto.class))).thenThrow(new ValidationException("Invalid input data"));
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDTO)))
                 .andExpect(status().isBadRequest());

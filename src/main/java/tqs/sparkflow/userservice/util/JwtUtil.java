@@ -148,6 +148,21 @@ public class JwtUtil {
   }
 
   /**
+   * Validates a token against a username, allowing exceptions to propagate.
+   * This method is primarily for testing purposes where specific exceptions are expected.
+   *
+   * @param token the JWT token
+   * @param username the username to validate against
+   * @return true if token is valid
+   * @throws io.jsonwebtoken.ExpiredJwtException if token is expired
+   * @throws io.jsonwebtoken.JwtException if token is malformed or invalid
+   */
+  public Boolean validateTokenWithExceptions(String token, String username) {
+    final String extractedUsername = extractUsername(token);
+    return (extractedUsername.equals(username) && !isTokenExpired(token));
+  }
+
+  /**
    * Checks if token is a refresh token.
    *
    * @param token the JWT token

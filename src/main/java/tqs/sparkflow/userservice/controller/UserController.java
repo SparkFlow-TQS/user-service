@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -65,6 +66,7 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDto userDto) {
     try {
       User savedUser = userService.createUser(userDto);
@@ -89,6 +91,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User not found")
   })
   @GetMapping("/{id}")
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<User> getUserById(
         @Parameter(description = "ID of the user to retrieve") @PathVariable String id) {
     try {
@@ -142,6 +145,7 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PutMapping("/{id}")
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<User> updateUser(
         @Parameter(description = "ID of the user to update") @PathVariable String id,
         @Valid @RequestBody UserUpdateDto userDetails) {
@@ -168,6 +172,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User not found")
   })
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<Void> deleteUser(
         @Parameter(description = "ID of the user to delete") @PathVariable String id) {
     try {
@@ -189,6 +194,7 @@ public class UserController {
             content = @Content(schema = @Schema(implementation = User.class)))
   })
   @GetMapping
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<List<User>> getAllUsers() {
     List<User> users = userService.getAllUsers();
     return ResponseEntity.ok(users);

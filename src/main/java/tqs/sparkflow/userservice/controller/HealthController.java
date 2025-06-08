@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Provides endpoints for checking service health status.
  */
 @RestController
-@RequestMapping("/api/v1/health")
+@RequestMapping("/health")
 public class HealthController {
 
   /**

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @Testcontainers
+@org.springframework.test.context.ActiveProfiles("test")
 class UserRepositoryTest {
 
     @Autowired

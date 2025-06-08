@@ -134,7 +134,7 @@ class UserServiceTest {
         assertThat(updatedUser.getUsername()).isEqualTo(updateDTO.getUsername());
         assertThat(updatedUser.getEmail()).isEqualTo(updateDTO.getEmail());
         assertThat(updatedUser.getPassword()).startsWith("encoded_"); // Password should be encoded
-        assertThat(updatedUser.isOperator()).isEqualTo(updateDTO.isOperator());
+        assertThat(updatedUser.isOperator()).isEqualTo(updateDTO.getOperator());
     }
 
     @Test

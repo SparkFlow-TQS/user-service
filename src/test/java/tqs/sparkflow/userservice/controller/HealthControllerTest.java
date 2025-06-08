@@ -32,7 +32,7 @@ class HealthControllerTest {
             http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/v1/health").permitAll()
+                    .requestMatchers("/health").permitAll()
                     .anyRequest().authenticated()
                 );
             return http.build();
@@ -43,20 +43,20 @@ class HealthControllerTest {
     @XrayTest(key = "HEALTH-1")
     @Requirement("HEALTH-1")
     void healthCheck_returnsHealthyMessage() throws Exception {
-        mockMvc.perform(get("/api/v1/health"))
+        mockMvc.perform(get("/health"))
             .andExpect(status().isOk())
             .andExpect(content().string("User Service is healthy :)"));
     }
 
     @Test
     void healthCheck_returns200Status() throws Exception {
-        mockMvc.perform(get("/api/v1/health"))
+        mockMvc.perform(get("/health"))
             .andExpect(status().isOk());
     }
 
     @Test
     void healthCheck_returnsCorrectContentType() throws Exception {
-        mockMvc.perform(get("/api/v1/health"))
+        mockMvc.perform(get("/health"))
             .andExpect(status().isOk())
             .andExpect(content().contentType("text/plain;charset=UTF-8"));
     }

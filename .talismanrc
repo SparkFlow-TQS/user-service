@@ -2,7 +2,7 @@ fileignoreconfig:
 - filename: src/main/resources/application.properties
   checksum: 53cbea28b2263b9a3d3d72b65498828a7decd102481f1a3ae33b1ec7f09a3c1f
 - filename: src/test/java/tqs/sparkflow/userservice/controller/UserControllerIT.java
-  checksum: a25863924699138cd5914528131aba59cc8fa3b62b72ef8cb4e9012acf482001
+  checksum: 96f2af623199efd724466086afb85fe58b147951566975110e366489108116f0
 - filename: src/test/java/tqs/sparkflow/userservice/repository/UserRepositoryIT.java
   checksum: 6efe12b2679fde485b7ea47006c748abe1599027e018750fc78750265c0800e2
 - filename: src/test/java/tqs/sparkflow/userservice/service/UserServiceIT.java

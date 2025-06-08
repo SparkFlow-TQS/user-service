@@ -19,7 +19,10 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 
-@SpringBootTest
+@SpringBootTest(classes = {
+    tqs.sparkflow.userservice.UserServiceApplication.class,
+    TestcontainersConfiguration.class
+})
 @ActiveProfiles("test")
 @Testcontainers
 class JwtUtilIT {
@@ -118,7 +121,7 @@ class JwtUtilIT {
     @Test
     void whenValidateTokenWithExpiredToken_thenThrowException() {
         assertThrows(ExpiredJwtException.class, () -> {
-            jwtUtil.validateToken(expiredToken, testUsername);
+            jwtUtil.validateTokenWithExceptions(expiredToken, testUsername);
         });
     }
 

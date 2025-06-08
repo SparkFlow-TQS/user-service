@@ -115,8 +115,10 @@ public class UserService {
       existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
     }
 
-    // Update operator status
-    existingUser.setOperator(userDetails.isOperator());
+    // Update operator status if provided
+    if (userDetails.getOperator() != null) {
+      existingUser.setOperator(userDetails.getOperator());
+    }
 
     return userRepository.save(existingUser);
   }

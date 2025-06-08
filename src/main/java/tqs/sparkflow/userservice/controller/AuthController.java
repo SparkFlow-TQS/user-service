@@ -30,7 +30,7 @@ import tqs.sparkflow.userservice.service.AuthService;
  * Provides endpoints for user login, registration, and token refresh.
  */
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/auth")
 @Validated
 @Tag(name = "Authentication", description = "APIs for user authentication")
 public class AuthController {

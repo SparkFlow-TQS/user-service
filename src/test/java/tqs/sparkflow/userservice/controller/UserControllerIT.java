@@ -22,10 +22,14 @@ import io.restassured.specification.RequestSpecification;
 import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
+import tqs.sparkflow.userservice.dto.LoginDto;
 import tqs.sparkflow.userservice.dto.UserCreateDto;
 import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.restassured.response.Response;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootTest(
     classes = {
@@ -52,28 +56,59 @@ class UserControllerIT {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private User testUser;
     private User operatorUser;
     private RequestSpecification operatorRequestSpec;
     private RequestSpecification userRequestSpec;
+    private String operatorToken;
+    private String userToken;
+    private final String testPassword = "password123";
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         RestAssured.port = port;
         userRepository.deleteAll();
         
-        testUser = new User("testuser", "test@example.com", "password123");
-        operatorUser = new User("operator", "operator@example.com", "password123", true);
+        // Create test users with encoded passwords
+        testUser = new User("testuser", "test@example.com", passwordEncoder.encode(testPassword));
+        operatorUser = new User("operator", "operator@example.com", passwordEncoder.encode(testPassword), true);
         
         userRepository.saveAll(java.util.List.of(testUser, operatorUser));
         
-        // Set up request specifications with basic auth for roles
+        // Get JWT tokens for both users
+        operatorToken = getJwtToken("operator@example.com", testPassword);
+        userToken = getJwtToken("test@example.com", testPassword);
+        
+        // Set up request specifications with JWT auth
         operatorRequestSpec = given()
-            .auth().basic("test", "test") // Using test user from TestConfig
+            .header("Authorization", "Bearer " + operatorToken)
             .contentType(MediaType.APPLICATION_JSON_VALUE);
             
         userRequestSpec = given()
+            .header("Authorization", "Bearer " + userToken)
             .contentType(MediaType.APPLICATION_JSON_VALUE);
+    }
+    
+    private String getJwtToken(String email, String password) throws Exception {
+        LoginDto loginDto = new LoginDto();
+        loginDto.setEmailOrUsername(email);
+        loginDto.setPassword(password);
+        
+        Response response = given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .body(objectMapper.writeValueAsString(loginDto))
+        .when()
+            .post("/api/v1/auth/login")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract().response();
+            
+        String responseBody = response.getBody().asString();
+        JsonNode jsonResponse = objectMapper.readTree(responseBody);
+        return jsonResponse.get("accessToken").asText();
     }
 
     @Test
@@ -87,7 +122,7 @@ class UserControllerIT {
         operatorRequestSpec
             .body(objectMapper.writeValueAsString(createDTO))
         .when()
-            .post("/users")
+            .post("/api/v1/users")
         .then()
             .statusCode(HttpStatus.CREATED.value())
             .body("username", equalTo("newuser"))
@@ -106,7 +141,7 @@ class UserControllerIT {
         operatorRequestSpec
             .body(objectMapper.writeValueAsString(createDTO))
         .when()
-            .post("/users")
+            .post("/api/v1/users")
         .then()
             .statusCode(HttpStatus.CONFLICT.value());
     }
@@ -122,7 +157,7 @@ class UserControllerIT {
         operatorRequestSpec
             .body(objectMapper.writeValueAsString(createDTO))
         .when()
-            .post("/users")
+            .post("/api/v1/users")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }
@@ -138,16 +173,16 @@ class UserControllerIT {
         userRequestSpec
             .body(objectMapper.writeValueAsString(createDTO))
         .when()
-            .post("/users")
+            .post("/api/v1/users")
         .then()
-            .statusCode(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void whenGetUserById_thenReturnUser() throws Exception {
         operatorRequestSpec
         .when()
-            .get("/users/{id}", testUser.getId())
+            .get("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.OK.value())
             .body("username", equalTo("testuser"))
@@ -159,7 +194,7 @@ class UserControllerIT {
     void whenGetUserByNonExistentId_thenReturnNotFound() throws Exception {
         operatorRequestSpec
         .when()
-            .get("/users/{id}", "507f1f77bcf86cd799439011")
+            .get("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
         .then()
             .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -168,16 +203,16 @@ class UserControllerIT {
     void whenGetUserByIdAsRegularUser_thenReturnForbidden() throws Exception {
         userRequestSpec
         .when()
-            .get("/users/{id}", testUser.getId())
+            .get("/api/v1/users/{id}", testUser.getId())
         .then()
-            .statusCode(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void whenGetUserByEmail_thenReturnUser() throws Exception {
         operatorRequestSpec
         .when()
-            .get("/users/email/{email}", "test@example.com")
+            .get("/api/v1/users/email/{email}", "test@example.com")
         .then()
             .statusCode(HttpStatus.OK.value())
             .body("username", equalTo("testuser"))
@@ -189,7 +224,7 @@ class UserControllerIT {
     void whenGetUserByNonExistentEmail_thenReturnNotFound() throws Exception {
         operatorRequestSpec
         .when()
-            .get("/users/email/{email}", "nonexistent@example.com")
+            .get("/api/v1/users/email/{email}", "nonexistent@example.com")
         .then()
             .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -198,7 +233,7 @@ class UserControllerIT {
     void whenGetAllUsers_thenReturnUserList() throws Exception {
         operatorRequestSpec
         .when()
-            .get("/users")
+            .get("/api/v1/users")
         .then()
             .statusCode(HttpStatus.OK.value())
             .body("$", hasSize(2))
@@ -210,9 +245,9 @@ class UserControllerIT {
     void whenGetAllUsersAsRegularUser_thenReturnForbidden() throws Exception {
         userRequestSpec
         .when()
-            .get("/users")
+            .get("/api/v1/users")
         .then()
-            .statusCode(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
@@ -225,7 +260,7 @@ class UserControllerIT {
         operatorRequestSpec
             .body(objectMapper.writeValueAsString(updateDTO))
         .when()
-            .put("/users/{id}", testUser.getId())
+            .put("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.OK.value())
             .body("username", equalTo("updateduser"))
@@ -243,7 +278,7 @@ class UserControllerIT {
         operatorRequestSpec
             .body(objectMapper.writeValueAsString(updateDTO))
         .when()
-            .put("/users/{id}", testUser.getId())
+            .put("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.CONFLICT.value());
     }
@@ -258,7 +293,7 @@ class UserControllerIT {
         operatorRequestSpec
             .body(objectMapper.writeValueAsString(updateDTO))
         .when()
-            .put("/users/{id}", "507f1f77bcf86cd799439011")
+            .put("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
         .then()
             .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -273,16 +308,16 @@ class UserControllerIT {
         userRequestSpec
             .body(objectMapper.writeValueAsString(updateDTO))
         .when()
-            .put("/users/{id}", testUser.getId())
+            .put("/api/v1/users/{id}", testUser.getId())
         .then()
-            .statusCode(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
     void whenDeleteUser_thenReturnNoContent() throws Exception {
         operatorRequestSpec
         .when()
-            .delete("/users/{id}", testUser.getId())
+            .delete("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.NO_CONTENT.value());
     }
@@ -291,7 +326,7 @@ class UserControllerIT {
     void whenDeleteNonExistentUser_thenReturnNotFound() throws Exception {
         operatorRequestSpec
         .when()
-            .delete("/users/{id}", "507f1f77bcf86cd799439011")
+            .delete("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
         .then()
             .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -300,9 +335,9 @@ class UserControllerIT {
     void whenDeleteUserAsRegularUser_thenReturnForbidden() throws Exception {
         userRequestSpec
         .when()
-            .delete("/users/{id}", testUser.getId())
+            .delete("/api/v1/users/{id}", testUser.getId())
         .then()
-            .statusCode(HttpStatus.UNAUTHORIZED.value());
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     // This endpoint doesn't exist in UserController - removing test
@@ -314,7 +349,7 @@ class UserControllerIT {
         given()
             .contentType(MediaType.APPLICATION_JSON_VALUE)
         .when()
-            .get("/users")
+            .get("/api/v1/users")
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }

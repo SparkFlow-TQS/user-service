@@ -43,12 +43,12 @@ public class TestConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/health/**").permitAll()
                 .requestMatchers("/actuator/**", "/actuator/health/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/health").permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().authenticated()  // Require authentication for other endpoints
             )
             .exceptionHandling(handling -> handling
                 .authenticationEntryPoint((request, response, authException) -> {

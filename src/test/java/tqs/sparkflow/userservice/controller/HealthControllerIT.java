@@ -14,11 +14,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import io.restassured.RestAssured;
 
 import tqs.sparkflow.userservice.UserServiceApplication;
+import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 
 @SpringBootTest(
     classes = {
         UserServiceApplication.class,
+        TestConfig.class,
         TestcontainersConfiguration.class
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
@@ -39,9 +41,9 @@ class HealthControllerIT {
     void whenGetHealth_thenReturnHealthy() throws Exception {
         given()
         .when()
-            .get("/health")
+            .get("/api/v1/health")
         .then()
             .statusCode(HttpStatus.OK.value())
-            .body(equalTo("User Service is healthy"));
+            .body(equalTo("User Service is healthy :)"));
     }
 } 

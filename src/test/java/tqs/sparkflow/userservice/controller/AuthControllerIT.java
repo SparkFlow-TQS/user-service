@@ -67,7 +67,7 @@ class AuthControllerIT {
     void setUp() {
         RestAssured.port = port;
         userRepository.deleteAll();
-        testUser = new User("testuser", "test@example.com", passwordEncoder.encode(testPassword));
+        testUser = new User("testuser", "test@example.com", passwordEncoder.encode(testPassword), true);
         testUser = userRepository.save(testUser);
     }
 
@@ -247,7 +247,7 @@ class AuthControllerIT {
         given()
             .header("Authorization", "Bearer " + accessToken)
         .when()
-            .get("/users/{id}", testUser.getId())
+            .get("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.OK.value())
             .body("email", equalTo(testUser.getEmail()))
@@ -259,7 +259,7 @@ class AuthControllerIT {
         given()
             .header("Authorization", "Bearer invalid.token.here")
         .when()
-            .get("/users/{id}", testUser.getId())
+            .get("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -268,7 +268,7 @@ class AuthControllerIT {
     void whenAccessProtectedEndpointWithoutToken_thenReturnUnauthorized() throws Exception {
         given()
         .when()
-            .get("/users/{id}", testUser.getId())
+            .get("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -282,7 +282,7 @@ class AuthControllerIT {
         given()
             .header("Authorization", "Bearer " + expiredToken)
         .when()
-            .get("/users/{id}", testUser.getId())
+            .get("/api/v1/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }

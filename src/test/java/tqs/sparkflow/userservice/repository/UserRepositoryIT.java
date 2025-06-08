@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -16,6 +17,7 @@ import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 import tqs.sparkflow.userservice.model.User;
 
 @DataMongoTest
+@Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @Testcontainers
 class UserRepositoryIT {
