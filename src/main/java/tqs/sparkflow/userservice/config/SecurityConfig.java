@@ -16,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import tqs.sparkflow.userservice.security.JwtAuthenticationFilter;
 
 /**
@@ -39,7 +38,8 @@ public class SecurityConfig {
   }
 
   @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+  public AuthenticationManager authenticationManager(
+      AuthenticationConfiguration config) throws Exception {
     return config.getAuthenticationManager();
   }
 
@@ -59,7 +59,8 @@ public class SecurityConfig {
         // 3. CSRF attacks target browser-based sessions using cookies
         // 4. This is the standard approach for REST APIs
         .csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .headers(headers -> headers
         .contentTypeOptions(content -> {})
         .frameOptions(frame -> frame.deny())
@@ -80,8 +81,8 @@ public class SecurityConfig {
             + "frame-ancestors 'none'; "
             + "object-src 'none'"))
         .referrerPolicy(referrer -> referrer
-          .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy
-            .STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+          .policy(org.springframework.security.web.header.writers
+            .ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
         .permissionsPolicy(permissions -> permissions
           .policy("accelerometer=(), "
             + "ambient-light-sensor=(), "
