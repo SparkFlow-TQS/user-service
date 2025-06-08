@@ -19,7 +19,11 @@ public class TestcontainersConfiguration {
             .withReuse(true)
             .withExposedPorts(27017)
             .withStartupTimeout(java.time.Duration.ofSeconds(60))
-            .withStartupAttempts(3);
+            .withStartupAttempts(3)
+            .withCommand(
+                "--setParameter", "maxTransactionLockRequestTimeoutMillis=5000",
+                "--setParameter", "enableLocalhostAuthBypass=false"
+            );
         mongoDBContainer.start();
     }
 
@@ -37,5 +41,7 @@ public class TestcontainersConfiguration {
         registry.add("spring.data.mongodb.connect-timeout", () -> 30000);
         registry.add("spring.data.mongodb.socket-timeout", () -> 30000);
         registry.add("spring.data.mongodb.max-wait-time", () -> 30000);
+        registry.add("spring.data.mongodb.server-selection-timeout", () -> 30000);
+        registry.add("spring.data.mongodb.replica-set-name", () -> "docker-rs");
     }
 } 

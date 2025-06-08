@@ -65,66 +65,56 @@ public class AuthService {
       throw new AuthenticationException(INVALID_CREDENTIALS);
     }
 
-    String accessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), 
-                                               user.isOperator());
+    String accessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), user.isOperator());
     String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
-    return new JwtResponseDto(accessToken, refreshToken, user.getUsername(), 
-                              user.getEmail(), user.isOperator());
+    return new JwtResponseDto(accessToken, refreshToken, user.getUsername(), user.getEmail(), user.isOperator());
   }
 
-  /**
-   * Refreshes JWT tokens using a valid refresh token.
-   *
-   * @param refreshTokenRequest the refresh token request
-   * @return new JWT response with refreshed tokens
-   * @throws AuthenticationException if refresh token is invalid
-   */
-  public JwtResponseDto refreshToken(RefreshTokenRequestDto refreshTokenRequest) {
-    String refreshToken = refreshTokenRequest.getRefreshToken();
-
-    if (!jwtUtil.isRefreshToken(refreshToken)) {
-      throw new AuthenticationException(INVALID_REFRESH_TOKEN);
+  private void validateLoginInput(LoginDto loginDto) {
+    if (!StringUtils.hasText(loginDto.getEmailOrUsername()) || 
+        !StringUtils.hasText(loginDto.getPassword())) {
+      throw new ValidationException(INVALID_CREDENTIALS);
     }
-
-    String username = jwtUtil.extractUsername(refreshToken);
-    User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new AuthenticationException(INVALID_CREDENTIALS));
-
-    if (!jwtUtil.validateToken(refreshToken, username)) {
-      throw new AuthenticationException(INVALID_REFRESH_TOKEN);
-    }
-
-    String newAccessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), 
-                                                  user.isOperator());
-    String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-
-    return new JwtResponseDto(newAccessToken, newRefreshToken, user.getUsername(), 
-                              user.getEmail(), user.isOperator());
   }
 
   /**
    * Registers a new user.
    *
    * @param registerDto the registration data
-   * @return the created user
+   * @return the registered user
+   * @throws ValidationException if input data is invalid
    * @throws DuplicateEmailException if email already exists
    * @throws DuplicateUsernameException if username already exists
-   * @throws ValidationException if input data is invalid
    */
   public User register(RegisterDto registerDto) {
     validateRegistrationInput(registerDto);
     checkForExistingUser(registerDto);
-
     User user = createUserFromDto(registerDto);
     return userRepository.save(user);
   }
 
-  private void validateLoginInput(LoginDto loginDto) {
-    if (!StringUtils.hasText(loginDto.getEmailOrUsername()) 
-        || !StringUtils.hasText(loginDto.getPassword())) {
-      throw new ValidationException(INVALID_CREDENTIALS);
+  /**
+   * Refreshes the access token using a refresh token.
+   *
+   * @param refreshTokenRequestDto the refresh token request
+   * @return JWT response with new tokens
+   * @throws AuthenticationException if refresh token is invalid
+   */
+  public JwtResponseDto refreshToken(RefreshTokenRequestDto refreshTokenRequestDto) {
+    String refreshToken = refreshTokenRequestDto.getRefreshToken();
+    if (!jwtUtil.isRefreshToken(refreshToken)) {
+      throw new AuthenticationException(INVALID_REFRESH_TOKEN);
     }
+
+    String username = jwtUtil.extractUsername(refreshToken);
+    User user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new AuthenticationException(INVALID_REFRESH_TOKEN));
+
+    String newAccessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), user.isOperator());
+    String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+
+    return new JwtResponseDto(newAccessToken, newRefreshToken, user.getUsername(), user.getEmail(), user.isOperator());
   }
 
   private void validateRegistrationInput(RegisterDto registerDto) {
