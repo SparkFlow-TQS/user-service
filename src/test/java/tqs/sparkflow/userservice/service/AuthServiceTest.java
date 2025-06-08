@@ -3,6 +3,7 @@ package tqs.sparkflow.userservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import tqs.sparkflow.userservice.dto.JwtResponseDTO;
 import tqs.sparkflow.userservice.dto.LoginDTO;
 import tqs.sparkflow.userservice.dto.RegisterDTO;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
@@ -23,6 +25,7 @@ import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ValidationException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
+import tqs.sparkflow.userservice.util.JwtUtil;
 import app.getxray.xray.junit.customjunitxml.annotations.XrayTest;
 import app.getxray.xray.junit.customjunitxml.annotations.Requirement;
 
@@ -35,6 +38,9 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtUtil jwtUtil;
+
     @InjectMocks
     private AuthService authService;
 
@@ -44,8 +50,11 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new User("testuser", "test@example.com", "encodedPassword");
+        testUser = new User();
         testUser.setId("1");
+        testUser.setUsername("testuser");
+        testUser.setEmail("test@example.com");
+        testUser.setPassword("encodedPassword");
         testUser.setOperator(false);
 
         loginDTO = new LoginDTO();
@@ -53,23 +62,32 @@ class AuthServiceTest {
         loginDTO.setPassword("password123");
 
         registerDTO = new RegisterDTO();
-        registerDTO.setUsername("newuser");
-        registerDTO.setEmail("new@example.com");
+        registerDTO.setEmail("test@example.com");
+        registerDTO.setUsername("testuser");
         registerDTO.setPassword("password123");
     }
 
     @Test
     @XrayTest(key = "AUTH-1")
     @Requirement("AUTH-1")
-    void whenLoginWithValidCredentials_thenReturnUser() {
+    void whenLoginWithValidCredentials_thenReturnJwtResponse() {
         when(userRepository.findByEmailOrUsername(loginDTO.getEmailOrUsername()))
             .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(loginDTO.getPassword(), testUser.getPassword()))
             .thenReturn(true);
+        when(jwtUtil.generateToken(anyString(), anyString(), any(Boolean.class)))
+            .thenReturn("access-token");
+        when(jwtUtil.generateRefreshToken(anyString()))
+            .thenReturn("refresh-token");
 
-        User result = authService.login(loginDTO);
+        JwtResponseDTO result = authService.login(loginDTO);
 
-        assertThat(result).isEqualTo(testUser);
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo("access-token");
+        assertThat(result.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(result.getUsername()).isEqualTo(testUser.getUsername());
+        assertThat(result.getEmail()).isEqualTo(testUser.getEmail());
+        assertThat(result.isOperator()).isEqualTo(testUser.isOperator());
     }
 
     @Test
@@ -141,16 +159,25 @@ class AuthServiceTest {
     @Test
     @XrayTest(key = "AUTH-7")
     @Requirement("AUTH-7")
-    void whenLoginWithUsername_thenReturnUser() {
+    void whenLoginWithUsername_thenReturnJwtResponse() {
         loginDTO.setEmailOrUsername("testuser");
         when(userRepository.findByEmailOrUsername(loginDTO.getEmailOrUsername()))
             .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(loginDTO.getPassword(), testUser.getPassword()))
             .thenReturn(true);
+        when(jwtUtil.generateToken(anyString(), anyString(), any(Boolean.class)))
+            .thenReturn("access-token");
+        when(jwtUtil.generateRefreshToken(anyString()))
+            .thenReturn("refresh-token");
 
-        User result = authService.login(loginDTO);
+        JwtResponseDTO result = authService.login(loginDTO);
 
-        assertThat(result).isEqualTo(testUser);
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo("access-token");
+        assertThat(result.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(result.getUsername()).isEqualTo(testUser.getUsername());
+        assertThat(result.getEmail()).isEqualTo(testUser.getEmail());
+        assertThat(result.isOperator()).isEqualTo(testUser.isOperator());
     }
 
     @Test

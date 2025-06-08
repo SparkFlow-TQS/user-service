@@ -13,7 +13,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.Valid;
+import tqs.sparkflow.userservice.dto.JwtResponseDTO;
 import tqs.sparkflow.userservice.dto.LoginDTO;
+import tqs.sparkflow.userservice.dto.RefreshTokenRequestDTO;
 import tqs.sparkflow.userservice.dto.RegisterDTO;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
@@ -37,15 +39,34 @@ public class AuthController {
     @Operation(summary = "User login", description = "Authenticates a user with email/username and password")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Login successful",
-            content = @Content(schema = @Schema(implementation = User.class))),
+            content = @Content(schema = @Schema(implementation = JwtResponseDTO.class))),
         @ApiResponse(responseCode = "401", description = "Invalid credentials"),
         @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PostMapping("/login")
-    public ResponseEntity<User> login(@Valid @RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<JwtResponseDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         try {
-            User user = authService.login(loginDTO);
-            return ResponseEntity.ok(user);
+            JwtResponseDTO response = authService.login(loginDTO);
+            return ResponseEntity.ok(response);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @Operation(summary = "Refresh token", description = "Refreshes an access token using a refresh token")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token refreshed successfully",
+            content = @Content(schema = @Schema(implementation = JwtResponseDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid refresh token"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
+        try {
+            JwtResponseDTO response = authService.refreshToken(refreshTokenRequest);
+            return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } catch (ValidationException e) {

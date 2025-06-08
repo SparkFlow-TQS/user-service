@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,10 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import tqs.sparkflow.userservice.dto.UserCreateDTO;
 import tqs.sparkflow.userservice.dto.UserUpdateDTO;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
+import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
@@ -27,6 +30,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -52,18 +58,22 @@ class UserServiceTest {
         updateDTO.setEmail("updated@example.com");
         updateDTO.setPassword("newpassword");
         updateDTO.setOperator(true);
+        
+        // Setup passwordEncoder mock (lenient to avoid unnecessary stubbing errors)
+        lenient().when(passwordEncoder.encode(any(String.class))).thenAnswer(i -> "encoded_" + i.getArgument(0));
     }
 
     @Test
     void whenCreateUser_thenReturnCreatedUser() {
         when(userRepository.existsByEmail(createDTO.getEmail())).thenReturn(false);
+        when(userRepository.existsByUsername(createDTO.getUsername())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         User createdUser = userService.createUser(createDTO);
 
         assertThat(createdUser.getUsername()).isEqualTo(createDTO.getUsername());
         assertThat(createdUser.getEmail()).isEqualTo(createDTO.getEmail());
-        assertThat(createdUser.getPassword()).isEqualTo(createDTO.getPassword());
+        assertThat(createdUser.getPassword()).startsWith("encoded_"); // Password should be encoded
         assertThat(createdUser.isOperator()).isEqualTo(createDTO.isOperator());
     }
 
@@ -116,13 +126,14 @@ class UserServiceTest {
     void whenUpdateUser_thenReturnUpdatedUser() {
         when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
         when(userRepository.findByEmail(updateDTO.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(updateDTO.getUsername())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         User updatedUser = userService.updateUser(testUser.getId(), updateDTO);
 
         assertThat(updatedUser.getUsername()).isEqualTo(updateDTO.getUsername());
         assertThat(updatedUser.getEmail()).isEqualTo(updateDTO.getEmail());
-        assertThat(updatedUser.getPassword()).isEqualTo(updateDTO.getPassword());
+        assertThat(updatedUser.getPassword()).startsWith("encoded_"); // Password should be encoded
         assertThat(updatedUser.isOperator()).isEqualTo(updateDTO.isOperator());
     }
 

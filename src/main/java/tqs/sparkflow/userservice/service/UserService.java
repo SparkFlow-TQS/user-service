@@ -3,11 +3,13 @@ package tqs.sparkflow.userservice.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import tqs.sparkflow.userservice.dto.UserCreateDTO;
 import tqs.sparkflow.userservice.dto.UserUpdateDTO;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
+import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
@@ -20,9 +22,11 @@ import tqs.sparkflow.userservice.repository.UserRepository;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
-  public UserService(UserRepository userRepository) {
+  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
   }
 
   /**
@@ -31,16 +35,21 @@ public class UserService {
    * @param userDTO the user data to create
    * @return the created user
    * @throws DuplicateEmailException if the email already exists
+   * @throws DuplicateUsernameException if the username already exists
    */
   public User createUser(UserCreateDTO userDTO) {
     if (userRepository.existsByEmail(userDTO.getEmail())) {
       throw new DuplicateEmailException("Email already exists: " + userDTO.getEmail());
     }
     
+    if (userRepository.existsByUsername(userDTO.getUsername())) {
+      throw new DuplicateUsernameException("Username already exists: " + userDTO.getUsername());
+    }
+    
     User user = new User();
     user.setUsername(userDTO.getUsername());
     user.setEmail(userDTO.getEmail());
-    user.setPassword(userDTO.getPassword());
+    user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
     user.setOperator(userDTO.isOperator());
     
     return userRepository.save(user);
@@ -78,19 +87,35 @@ public class UserService {
    * @return the updated user
    * @throws ResourceNotFoundException if the user is not found
    * @throws DuplicateEmailException if the new email already exists
+   * @throws DuplicateUsernameException if the new username already exists
    */
   public User updateUser(String id, UserUpdateDTO userDetails) {
     User existingUser = getUserById(id);
 
     // Check if the new email is already taken by another user
-    Optional<User> userWithSameEmail = userRepository.findByEmail(userDetails.getEmail());
-    if (userWithSameEmail.isPresent() && !userWithSameEmail.get().getId().equals(id)) {
-      throw new DuplicateEmailException("Email already exists: " + userDetails.getEmail());
+    if (userDetails.getEmail() != null) {
+      Optional<User> userWithSameEmail = userRepository.findByEmail(userDetails.getEmail());
+      if (userWithSameEmail.isPresent() && !userWithSameEmail.get().getId().equals(id)) {
+        throw new DuplicateEmailException("Email already exists: " + userDetails.getEmail());
+      }
+      existingUser.setEmail(userDetails.getEmail());
     }
 
-    existingUser.setUsername(userDetails.getUsername());
-    existingUser.setEmail(userDetails.getEmail());
-    existingUser.setPassword(userDetails.getPassword());
+    // Check if the new username is already taken by another user
+    if (userDetails.getUsername() != null) {
+      Optional<User> userWithSameUsername = userRepository.findByUsername(userDetails.getUsername());
+      if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(id)) {
+        throw new DuplicateUsernameException("Username already exists: " + userDetails.getUsername());
+      }
+      existingUser.setUsername(userDetails.getUsername());
+    }
+
+    // Update password if provided
+    if (userDetails.getPassword() != null) {
+      existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+    }
+
+    // Update operator status
     existingUser.setOperator(userDetails.isOperator());
 
     return userRepository.save(existingUser);

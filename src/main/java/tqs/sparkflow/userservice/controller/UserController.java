@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import jakarta.validation.Valid;
 import tqs.sparkflow.userservice.model.User;
@@ -21,8 +22,12 @@ import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.service.UserService;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * REST controller for managing users.
@@ -32,6 +37,7 @@ import java.util.List;
 @RequestMapping("/users")
 @Validated
 @Tag(name = "User Management", description = "APIs for managing users")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
   private final UserService userService;
@@ -180,5 +186,38 @@ public class UserController {
   public ResponseEntity<List<User>> getAllUsers() {
     List<User> users = userService.getAllUsers();
     return ResponseEntity.ok(users);
+  }
+
+  @Operation(summary = "Get user profile", description = "Gets the current user's profile information")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized")
+  })
+  @GetMapping("/profile")
+  public ResponseEntity<Map<String, Object>> getProfile() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+    Map<String, Object> profile = new HashMap<>();
+    profile.put("username", authentication.getName());
+    profile.put("authorities", authentication.getAuthorities());
+    profile.put("authenticated", authentication.isAuthenticated());
+    
+    return ResponseEntity.ok(profile);
+  }
+
+  @Operation(summary = "Test protected endpoint", description = "Tests JWT authentication")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Access granted"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized")
+  })
+  @GetMapping("/test")
+  public ResponseEntity<Map<String, String>> test() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+    Map<String, String> response = new HashMap<>();
+    response.put("message", "Access granted to protected endpoint");
+    response.put("user", authentication.getName());
+    
+    return ResponseEntity.ok(response);
   }
 } 

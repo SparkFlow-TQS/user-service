@@ -4,7 +4,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import tqs.sparkflow.userservice.dto.JwtResponseDTO;
 import tqs.sparkflow.userservice.dto.LoginDTO;
+import tqs.sparkflow.userservice.dto.RefreshTokenRequestDTO;
 import tqs.sparkflow.userservice.dto.RegisterDTO;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
@@ -12,6 +14,7 @@ import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ValidationException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
+import tqs.sparkflow.userservice.util.JwtUtil;
 
 @Service
 public class AuthService {
@@ -22,16 +25,19 @@ public class AuthService {
     private static final String INVALID_EMAIL = "Invalid email format";
     private static final String INVALID_USERNAME = "Username must be between 3 and 50 characters";
     private static final String INVALID_PASSWORD = "Password must be at least 8 characters long";
+    private static final String INVALID_REFRESH_TOKEN = "Invalid refresh token";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
-    public User login(LoginDTO loginDTO) {
+    public JwtResponseDTO login(LoginDTO loginDTO) {
         validateLoginInput(loginDTO);
 
         User user = userRepository.findByEmailOrUsername(loginDTO.getEmailOrUsername())
@@ -41,7 +47,31 @@ public class AuthService {
             throw new AuthenticationException(INVALID_CREDENTIALS);
         }
 
-        return user;
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), user.isOperator());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+
+        return new JwtResponseDTO(accessToken, refreshToken, user.getUsername(), user.getEmail(), user.isOperator());
+    }
+
+    public JwtResponseDTO refreshToken(RefreshTokenRequestDTO refreshTokenRequest) {
+        String refreshToken = refreshTokenRequest.getRefreshToken();
+        
+        if (!jwtUtil.isRefreshToken(refreshToken)) {
+            throw new AuthenticationException(INVALID_REFRESH_TOKEN);
+        }
+
+        String username = jwtUtil.extractUsername(refreshToken);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthenticationException(INVALID_CREDENTIALS));
+
+        if (!jwtUtil.validateToken(refreshToken, username)) {
+            throw new AuthenticationException(INVALID_REFRESH_TOKEN);
+        }
+
+        String newAccessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), user.isOperator());
+        String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+
+        return new JwtResponseDTO(newAccessToken, newRefreshToken, user.getUsername(), user.getEmail(), user.isOperator());
     }
 
     public User register(RegisterDTO registerDTO) {

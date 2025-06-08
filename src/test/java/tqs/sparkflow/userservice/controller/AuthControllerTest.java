@@ -17,6 +17,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tqs.sparkflow.userservice.dto.JwtResponseDTO;
 import tqs.sparkflow.userservice.dto.LoginDTO;
 import tqs.sparkflow.userservice.dto.RegisterDTO;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
@@ -82,16 +83,20 @@ class AuthControllerTest {
     }
 
     @Test
-    void whenLoginWithValidCredentials_thenReturnUser() throws Exception {
-        when(authService.login(any(LoginDTO.class))).thenReturn(testUser);
+    void whenLoginWithValidCredentials_thenReturnJwtResponse() throws Exception {
+        JwtResponseDTO jwtResponse = new JwtResponseDTO("access-token", "refresh-token", 
+            testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
+        when(authService.login(any(LoginDTO.class))).thenReturn(jwtResponse);
 
         mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
+                .andExpect(jsonPath("$.accessToken").value("access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+                .andExpect(jsonPath("$.username").value(testUser.getUsername()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
-                .andExpect(jsonPath("$.username").value(testUser.getUsername()));
+                .andExpect(jsonPath("$.operator").value(testUser.isOperator()));
     }
 
     @Test

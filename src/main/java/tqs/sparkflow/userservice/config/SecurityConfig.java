@@ -6,12 +6,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import tqs.sparkflow.userservice.security.JwtAuthenticationFilter;
 
 /**
  * Security configuration for the application.
@@ -21,9 +27,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @EnableWebSecurity
 public class SecurityConfig {
 
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+  }
+
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    return config.getAuthenticationManager();
   }
 
   /**
@@ -42,6 +59,7 @@ public class SecurityConfig {
         // 3. CSRF attacks target browser-based sessions using cookies
         // 4. This is the standard approach for REST APIs
         .csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .headers(headers -> headers
         .contentTypeOptions(content -> {})
         .frameOptions(frame -> frame.deny())
@@ -110,19 +128,7 @@ public class SecurityConfig {
         .anyRequest()
         .authenticated()
       )
-        .addFilterBefore(new OncePerRequestFilter() {
-            @Override
-            protected void doFilterInternal(
-                @NonNull HttpServletRequest request,
-                @NonNull HttpServletResponse response,
-                @NonNull FilterChain filterChain
-            ) throws jakarta.servlet.ServletException, java.io.IOException {
-              // Set SameSite attribute for JSESSIONID cookie
-              response.addHeader("Set-Cookie",
-                "JSESSIONID=" + request.getSession().getId() + "; SameSite=Strict; Secure; HttpOnly");
-              filterChain.doFilter(request, response);
-            }
-        }, org.springframework.security.web.context.SecurityContextHolderFilter.class);
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     
     return http.build();
   }
