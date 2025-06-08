@@ -1,33 +1,36 @@
 package tqs.sparkflow.userservice.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import tqs.sparkflow.userservice.model.User;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import tqs.sparkflow.userservice.dto.UserCreateDTO;
 import tqs.sparkflow.userservice.dto.UserUpdateDTO;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
+import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.service.UserService;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * REST controller for managing users.
@@ -49,11 +52,12 @@ public class UserController {
   /**
    * Creates a new user.
    *
-   * @param userDTO the user data to create
+   * @param userDto the user data to create
    * @return the created user with HTTP 201 status
    * @throws DuplicateEmailException if the email already exists
    */
-  @Operation(summary = "Create a new user", description = "Creates a new user with the provided details")
+  @Operation(summary = "Create a new user", 
+             description = "Creates a new user with the provided details")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "User created successfully",
         content = @Content(schema = @Schema(implementation = User.class))),
@@ -61,9 +65,9 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping
-  public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDTO userDTO) {
+  public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDTO userDto) {
     try {
-      User savedUser = userService.createUser(userDTO);
+      User savedUser = userService.createUser(userDto);
       return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     } catch (DuplicateEmailException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -77,7 +81,8 @@ public class UserController {
    * @return the user with HTTP 200 status
    * @throws ResourceNotFoundException if the user is not found
    */
-  @Operation(summary = "Get user by ID", description = "Retrieves a user by their unique identifier")
+  @Operation(summary = "Get user by ID", 
+             description = "Retrieves a user by their unique identifier")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "User found",
         content = @Content(schema = @Schema(implementation = User.class))),
@@ -101,11 +106,12 @@ public class UserController {
    * @return the user with HTTP 200 status
    * @throws ResourceNotFoundException if the user is not found
    */
-  @Operation(summary = "Get user by email", description = "Retrieves a user by their email address")
+  @Operation(summary = "Get user by email", 
+             description = "Retrieves a user by their email address")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "User found",
-      content = @Content(schema = @Schema(implementation = User.class))),
-    @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "200", description = "User found",
+        content = @Content(schema = @Schema(implementation = User.class))),
+      @ApiResponse(responseCode = "404", description = "User not found")
   })
   @GetMapping("/email/{email}")
   public ResponseEntity<User> getUserByEmail(
@@ -188,7 +194,13 @@ public class UserController {
     return ResponseEntity.ok(users);
   }
 
-  @Operation(summary = "Get user profile", description = "Gets the current user's profile information")
+  /**
+   * Gets the current user's profile information.
+   *
+   * @return the user's profile information with HTTP 200 status
+   */
+  @Operation(summary = "Get user profile", 
+             description = "Gets the current user's profile information")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
       @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -205,6 +217,11 @@ public class UserController {
     return ResponseEntity.ok(profile);
   }
 
+  /**
+   * Tests JWT authentication on a protected endpoint.
+   *
+   * @return a test response with HTTP 200 status if authenticated
+   */
   @Operation(summary = "Test protected endpoint", description = "Tests JWT authentication")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Access granted"),
