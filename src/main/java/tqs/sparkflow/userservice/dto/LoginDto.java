@@ -1,14 +1,17 @@
 package tqs.sparkflow.userservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Data Transfer Object for user login requests.
  */
 public class LoginDto {
+  @NotNull(message = "Email or username cannot be null")
   @NotBlank(message = "Email or username is required")
   private String emailOrUsername;
 
+  @NotNull(message = "Password cannot be null")
   @NotBlank(message = "Password is required")
   private String password;
 

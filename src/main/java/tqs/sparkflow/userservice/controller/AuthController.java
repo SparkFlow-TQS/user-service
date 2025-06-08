@@ -10,10 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import tqs.sparkflow.userservice.dto.JwtResponseDto;
 import tqs.sparkflow.userservice.dto.LoginDto;
 import tqs.sparkflow.userservice.dto.RefreshTokenRequestDto;
@@ -56,14 +53,11 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping("/login")
-  public ResponseEntity<JwtResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
+  public ResponseEntity<?> login(@Valid @RequestBody LoginDto loginDto) {
     try {
-      JwtResponseDto response = authService.login(loginDto);
-      return ResponseEntity.ok(response);
-    } catch (AuthenticationException e) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    } catch (ValidationException e) {
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.ok(authService.login(loginDto));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
     }
   }
 
@@ -108,16 +102,11 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping("/register")
-  public ResponseEntity<User> register(@Valid @RequestBody RegisterDto registerDto) {
+  public ResponseEntity<?> register(@Valid @RequestBody RegisterDto registerDto) {
     try {
-      User user = authService.register(registerDto);
-      return ResponseEntity.status(HttpStatus.CREATED).body(user);
-    } catch (DuplicateEmailException e) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).build();
-    } catch (DuplicateUsernameException e) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).build();
-    } catch (ValidationException e) {
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.ok(authService.register(registerDto));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
     }
   }
 } 

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Date;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 
 @SpringBootTest
@@ -41,11 +43,12 @@ class JwtUtilIT {
         refreshToken = jwtUtil.generateRefreshToken(testUsername);
         
         // Create an expired token for testing
+        String secret = "testSecretKeyThatIsLongEnoughForHS512AlgorithmAndMeetsSecurityRequirementsWithAtLeast64Bytes";
         expiredToken = Jwts.builder()
                 .setSubject(testUsername)
                 .setIssuedAt(new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24)) // 1 day ago
                 .setExpiration(new Date(System.currentTimeMillis() - 1000 * 60 * 60)) // 1 hour ago
-                .signWith(SignatureAlgorithm.HS512, "mySecretKey")
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS512)
                 .compact();
     }
 
