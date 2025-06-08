@@ -35,6 +35,7 @@ public class UserSteps {
     private String userJson;
     private String lastCreatedUsername;
     private String baseUrl;
+    private String jwtToken;
 
     @Before
     public void setUp() {
@@ -62,24 +63,75 @@ public class UserSteps {
 
     @Given("I am an authenticated administrator")
     public void i_am_an_authenticated_administrator() {
-        // Verify we can access the API
+        // Create an operator user and get JWT token
         try {
-            ResponseEntity<String> testResponse = restTemplate
-                .withBasicAuth("test", "test")
-                .getForEntity(baseUrl + "/users", String.class);
-            logger.info("Authentication test response - Status: {}, Headers: {}", 
-                testResponse.getStatusCode(), testResponse.getHeaders());
-            
-            if (testResponse.getStatusCode() != HttpStatus.OK) {
-                logger.error("Failed to authenticate as admin. Status: {}, Body: {}, Headers: {}", 
-                    testResponse.getStatusCode(), testResponse.getBody(), testResponse.getHeaders());
-                throw new RuntimeException("Failed to authenticate as admin. Status: " + testResponse.getStatusCode());
+            // First, create an operator user via the registration endpoint
+            String registerJson = """
+            {
+                "username": "admin",
+                "email": "admin@example.com",
+                "password": "password123",
+                "operator": true
             }
+            """;
+            
+            HttpHeaders registerHeaders = new HttpHeaders();
+            registerHeaders.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> registerRequest = new HttpEntity<>(registerJson, registerHeaders);
+            
+            // Register the operator user
+            ResponseEntity<String> registerResponse = restTemplate.postForEntity(
+                baseUrl + "/api/v1/auth/register", registerRequest, String.class);
+            logger.info("Register response - Status: {}", registerResponse.getStatusCode());
+            
+            // Now login to get JWT token
+            String loginJson = """
+            {
+                "emailOrUsername": "admin@example.com",
+                "password": "password123"
+            }
+            """;
+            
+            HttpHeaders loginHeaders = new HttpHeaders();
+            loginHeaders.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> loginRequest = new HttpEntity<>(loginJson, loginHeaders);
+            
+            ResponseEntity<String> loginResponse = restTemplate.postForEntity(
+                baseUrl + "/api/v1/auth/login", loginRequest, String.class);
+            
+            if (loginResponse.getStatusCode() != HttpStatus.OK) {
+                logger.error("Failed to login as admin. Status: {}, Body: {}", 
+                    loginResponse.getStatusCode(), loginResponse.getBody());
+                throw new RuntimeException("Failed to login as admin. Status: " + loginResponse.getStatusCode());
+            }
+            
+            // Extract JWT token from response
+            String responseBody = loginResponse.getBody();
+            // Parse JSON to extract accessToken
+            if (responseBody != null && responseBody.contains("accessToken")) {
+                // Simple JSON parsing - extract token between quotes after "accessToken":"
+                int tokenStart = responseBody.indexOf("\"accessToken\":\"") + 15;
+                int tokenEnd = responseBody.indexOf("\"", tokenStart);
+                jwtToken = responseBody.substring(tokenStart, tokenEnd);
+                logger.info("Successfully extracted JWT token");
+            } else {
+                throw new RuntimeException("Failed to extract JWT token from login response");
+            }
+            
             logger.info("Successfully authenticated as admin");
         } catch (Exception e) {
             logger.error("Error during authentication test: {}", e.getMessage(), e);
             throw new RuntimeException("Error during authentication test: " + e.getMessage(), e);
         }
+    }
+
+    private HttpHeaders createAuthenticatedHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (jwtToken != null) {
+            headers.setBearerAuth(jwtToken);
+        }
+        return headers;
     }
 
     @Given("there is an existing user {string}")
@@ -92,12 +144,9 @@ public class UserSteps {
             "operator": false
         }
         """, username, username);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = createAuthenticatedHeaders();
         HttpEntity<String> entity = new HttpEntity<>(userJson, headers);
-        response = restTemplate
-            .withBasicAuth("test", "test")
-            .postForEntity(baseUrl + "/users", entity, String.class);
+        response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
         
         if (response.getStatusCode() != HttpStatus.CREATED) {
             logger.error("Failed to create user. Status: {}, Body: {}", 
@@ -111,9 +160,10 @@ public class UserSteps {
 
     @When("I delete the user with id {string}")
     public void i_delete_the_user_with_id(String id) {
+        HttpHeaders headers = createAuthenticatedHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> deleteResponse = restTemplate
-            .withBasicAuth("test", "test")
-            .exchange(baseUrl + "/users/" + id, HttpMethod.DELETE, null, String.class);
+            .exchange(baseUrl + "/api/v1/users/" + id, HttpMethod.DELETE, entity, String.class);
 
         logger.info("Delete response status: {}", deleteResponse.getStatusCode());
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -143,12 +193,10 @@ public class UserSteps {
             "operator": %s
         }
         """, lastCreatedUsername, lastCreatedUsername, operator);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = createAuthenticatedHeaders();
         HttpEntity<String> entity = new HttpEntity<>(updateJson, headers);
         response = restTemplate
-            .withBasicAuth("test", "test")
-            .exchange(baseUrl + "/users/" + userId, HttpMethod.PUT, entity, String.class);
+            .exchange(baseUrl + "/api/v1/users/" + userId, HttpMethod.PUT, entity, String.class);
         
         if (response.getStatusCode() != HttpStatus.OK) {
             logger.error("Failed to update user role. Status: {}, Body: {}", 
@@ -164,12 +212,9 @@ public class UserSteps {
 
     @When("I send a POST request to \\/api\\/v1\\/users")
     public void i_send_post_request() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = createAuthenticatedHeaders();
         HttpEntity<String> entity = new HttpEntity<>(userJson, headers);
-        response = restTemplate
-            .withBasicAuth("test", "test")
-            .postForEntity(baseUrl + "/users", entity, String.class);
+        response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
         
         if (response.getStatusCode() != HttpStatus.CREATED) {
             logger.error("Failed to create user. Status: {}, Body: {}", 
@@ -228,9 +273,10 @@ public class UserSteps {
             throw new RuntimeException("User ID is null for username: " + lastCreatedUsername);
         }
 
+        HttpHeaders headers = createAuthenticatedHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<Void> deleteResponse = restTemplate
-            .withBasicAuth("test", "test")
-            .exchange(baseUrl + "/users/" + userId, HttpMethod.DELETE, null, Void.class);
+            .exchange(baseUrl + "/api/v1/users/" + userId, HttpMethod.DELETE, entity, Void.class);
 
         logger.info("Delete response status: {}", deleteResponse.getStatusCode());
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -241,9 +287,10 @@ public class UserSteps {
 
     private String getUserIdByUsername(String username) {
         try {
+            HttpHeaders headers = createAuthenticatedHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(null, headers);
             ResponseEntity<List<Map<String, Object>>> usersResponse = restTemplate
-                .withBasicAuth("test", "test")
-                .exchange(baseUrl + "/users", HttpMethod.GET, null, 
+                .exchange(baseUrl + "/api/v1/users", HttpMethod.GET, entity, 
                     new ParameterizedTypeReference<List<Map<String, Object>>>() {});
 
             if (usersResponse.getStatusCode() != HttpStatus.OK) {
