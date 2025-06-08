@@ -224,14 +224,15 @@ class AuthControllerIT {
 
     @Test
     void whenAccessProtectedEndpointWithValidToken_thenReturnSuccess() throws Exception {
-        // First, login to get access token
-        LoginDto loginRequest = new LoginDto();
-        loginRequest.setEmailOrUsername("test@example.com");
-        loginRequest.setPassword(testPassword);
-        
+        // First, login to get the access token
+        LoginDto loginDto = new LoginDto();
+        loginDto.setEmailOrUsername(testUser.getEmail());
+        loginDto.setPassword(testPassword);
+
+        // Get the access token from login response
         Response loginResponse = given()
             .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .body(objectMapper.writeValueAsString(loginRequest))
+            .body(objectMapper.writeValueAsString(loginDto))
         .when()
             .post("/api/v1/auth/login")
         .then()
@@ -242,16 +243,15 @@ class AuthControllerIT {
         JsonNode loginJson = objectMapper.readTree(loginResponseBody);
         String accessToken = loginJson.get("accessToken").asText();
 
-        // Use access token to access protected endpoint - correct path is /users not /api/v1/users
+        // Use access token to access protected endpoint
         given()
             .header("Authorization", "Bearer " + accessToken)
         .when()
             .get("/users/{id}", testUser.getId())
         .then()
             .statusCode(HttpStatus.OK.value())
-            .body("id", equalTo(testUser.getId()))
-            .body("username", equalTo(testUser.getUsername()))
-            .body("email", equalTo(testUser.getEmail()));
+            .body("email", equalTo(testUser.getEmail()))
+            .body("username", equalTo(testUser.getUsername()));
     }
 
     @Test

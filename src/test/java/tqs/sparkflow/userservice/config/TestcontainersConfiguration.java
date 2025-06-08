@@ -6,15 +6,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
+import org.springframework.context.annotation.Profile;
 
 @TestConfiguration
+@Profile("test")
 public class TestcontainersConfiguration {
 
     private static final MongoDBContainer mongoDBContainer;
 
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:6.0.2")
-            .withReuse(true);
+        mongoDBContainer = new MongoDBContainer("mongo:7.0")
+            .withReuse(true)
+            .withExposedPorts(27017);
         mongoDBContainer.start();
     }
 
