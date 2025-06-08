@@ -48,7 +48,7 @@ public class CucumberTestConfig {
         .headers(headers -> headers.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/v1/users", "/api/v1/users/**").hasRole("ADMIN")
+            .requestMatchers("/users", "/users/**").hasRole("ADMIN")
             .anyRequest().permitAll()
         )
         .httpBasic(httpBasic -> {});

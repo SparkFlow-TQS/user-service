@@ -66,7 +66,7 @@ public class UserSteps {
         try {
             ResponseEntity<String> testResponse = restTemplate
                 .withBasicAuth("test", "test")
-                .getForEntity(baseUrl + "/api/v1/users", String.class);
+                .getForEntity(baseUrl + "/users", String.class);
             logger.info("Authentication test response - Status: {}, Headers: {}", 
                 testResponse.getStatusCode(), testResponse.getHeaders());
             
@@ -97,7 +97,7 @@ public class UserSteps {
         HttpEntity<String> entity = new HttpEntity<>(userJson, headers);
         response = restTemplate
             .withBasicAuth("test", "test")
-            .postForEntity(baseUrl + "/api/v1/users", entity, String.class);
+            .postForEntity(baseUrl + "/users", entity, String.class);
         
         if (response.getStatusCode() != HttpStatus.CREATED) {
             logger.error("Failed to create user. Status: {}, Body: {}", 
@@ -113,7 +113,7 @@ public class UserSteps {
     public void i_delete_the_user_with_id(String id) {
         ResponseEntity<String> deleteResponse = restTemplate
             .withBasicAuth("test", "test")
-            .exchange(baseUrl + "/api/v1/users/" + id, HttpMethod.DELETE, null, String.class);
+            .exchange(baseUrl + "/users/" + id, HttpMethod.DELETE, null, String.class);
 
         logger.info("Delete response status: {}", deleteResponse.getStatusCode());
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -148,7 +148,7 @@ public class UserSteps {
         HttpEntity<String> entity = new HttpEntity<>(updateJson, headers);
         response = restTemplate
             .withBasicAuth("test", "test")
-            .exchange(baseUrl + "/api/v1/users/" + userId, HttpMethod.PUT, entity, String.class);
+            .exchange(baseUrl + "/users/" + userId, HttpMethod.PUT, entity, String.class);
         
         if (response.getStatusCode() != HttpStatus.OK) {
             logger.error("Failed to update user role. Status: {}, Body: {}", 
@@ -169,7 +169,7 @@ public class UserSteps {
         HttpEntity<String> entity = new HttpEntity<>(userJson, headers);
         response = restTemplate
             .withBasicAuth("test", "test")
-            .postForEntity(baseUrl + "/api/v1/users", entity, String.class);
+            .postForEntity(baseUrl + "/users", entity, String.class);
         
         if (response.getStatusCode() != HttpStatus.CREATED) {
             logger.error("Failed to create user. Status: {}, Body: {}", 
@@ -230,7 +230,7 @@ public class UserSteps {
 
         ResponseEntity<Void> deleteResponse = restTemplate
             .withBasicAuth("test", "test")
-            .exchange(baseUrl + "/api/v1/users/" + userId, HttpMethod.DELETE, null, Void.class);
+            .exchange(baseUrl + "/users/" + userId, HttpMethod.DELETE, null, Void.class);
 
         logger.info("Delete response status: {}", deleteResponse.getStatusCode());
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -243,7 +243,7 @@ public class UserSteps {
         try {
             ResponseEntity<List<Map<String, Object>>> usersResponse = restTemplate
                 .withBasicAuth("test", "test")
-                .exchange(baseUrl + "/api/v1/users", HttpMethod.GET, null, 
+                .exchange(baseUrl + "/users", HttpMethod.GET, null, 
                     new ParameterizedTypeReference<List<Map<String, Object>>>() {});
 
             if (usersResponse.getStatusCode() != HttpStatus.OK) {

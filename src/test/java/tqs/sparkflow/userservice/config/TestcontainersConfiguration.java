@@ -17,10 +17,10 @@ public class TestcontainersConfiguration {
 
     static {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:7.0"))
-            .withReuse(true)
+            .withReuse(false) // Disable reuse in CI environments
             .withExposedPorts(27017)
-            .withStartupTimeout(java.time.Duration.ofSeconds(60))
-            .withStartupAttempts(3);
+            .withStartupTimeout(java.time.Duration.ofSeconds(120)) // Increased timeout for CI
+            .withStartupAttempts(5); // More attempts for CI
         
         mongoDBContainer.start();
     }
