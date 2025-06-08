@@ -23,8 +23,8 @@ import io.restassured.response.Response;
 import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
-import tqs.sparkflow.userservice.dto.LoginDTO;
-import tqs.sparkflow.userservice.dto.RefreshTokenRequestDTO;
+import tqs.sparkflow.userservice.dto.LoginDto;
+import tqs.sparkflow.userservice.dto.RefreshTokenRequestDto;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
 import tqs.sparkflow.userservice.util.JwtUtil;
@@ -73,7 +73,7 @@ class AuthControllerIT {
 
     @Test
     void whenLoginWithValidCredentials_thenReturnTokens() throws Exception {
-        LoginDTO loginRequest = new LoginDTO();
+        LoginDto loginRequest = new LoginDto();
         loginRequest.setEmailOrUsername("test@example.com");
         loginRequest.setPassword(testPassword);
 
@@ -103,7 +103,7 @@ class AuthControllerIT {
 
     @Test
     void whenLoginWithInvalidEmail_thenReturnUnauthorized() throws Exception {
-        LoginDTO loginRequest = new LoginDTO();
+        LoginDto loginRequest = new LoginDto();
         loginRequest.setEmailOrUsername("invalid@example.com");
         loginRequest.setPassword(testPassword);
 
@@ -118,7 +118,7 @@ class AuthControllerIT {
 
     @Test
     void whenLoginWithInvalidPassword_thenReturnUnauthorized() throws Exception {
-        LoginDTO loginRequest = new LoginDTO();
+        LoginDto loginRequest = new LoginDto();
         loginRequest.setEmailOrUsername("test@example.com");
         loginRequest.setPassword("wrongpassword");
 
@@ -133,7 +133,7 @@ class AuthControllerIT {
 
     @Test
     void whenLoginWithEmptyCredentials_thenReturnBadRequest() throws Exception {
-        LoginDTO loginRequest = new LoginDTO();
+        LoginDto loginRequest = new LoginDto();
         loginRequest.setEmailOrUsername("");
         loginRequest.setPassword("");
 
@@ -149,7 +149,7 @@ class AuthControllerIT {
     @Test
     void whenRefreshTokenWithValidToken_thenReturnNewTokens() throws Exception {
         // First, login to get tokens
-        LoginDTO loginRequest = new LoginDTO();
+        LoginDto loginRequest = new LoginDto();
         loginRequest.setEmailOrUsername("test@example.com");
         loginRequest.setPassword(testPassword);
         
@@ -167,7 +167,7 @@ class AuthControllerIT {
         String refreshToken = loginJson.get("refreshToken").asText();
 
         // Now use refresh token to get new tokens
-        RefreshTokenRequestDTO refreshRequest = new RefreshTokenRequestDTO();
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
         refreshRequest.setRefreshToken(refreshToken);
 
         Response refreshResponse = given()
@@ -196,7 +196,7 @@ class AuthControllerIT {
 
     @Test
     void whenRefreshTokenWithInvalidToken_thenReturnUnauthorized() throws Exception {
-        RefreshTokenRequestDTO refreshRequest = new RefreshTokenRequestDTO();
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
         refreshRequest.setRefreshToken("invalid.token.here");
 
         given()
@@ -210,7 +210,7 @@ class AuthControllerIT {
 
     @Test
     void whenRefreshTokenWithEmptyToken_thenReturnBadRequest() throws Exception {
-        RefreshTokenRequestDTO refreshRequest = new RefreshTokenRequestDTO();
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
         refreshRequest.setRefreshToken("");
 
         given()
@@ -225,7 +225,7 @@ class AuthControllerIT {
     @Test
     void whenAccessProtectedEndpointWithValidToken_thenReturnSuccess() throws Exception {
         // First, login to get access token
-        LoginDTO loginRequest = new LoginDTO();
+        LoginDto loginRequest = new LoginDto();
         loginRequest.setEmailOrUsername("test@example.com");
         loginRequest.setPassword(testPassword);
         

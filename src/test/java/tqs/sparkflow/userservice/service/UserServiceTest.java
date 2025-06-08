@@ -17,8 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import tqs.sparkflow.userservice.dto.UserCreateDTO;
-import tqs.sparkflow.userservice.dto.UserUpdateDTO;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
@@ -38,8 +38,8 @@ class UserServiceTest {
     private UserService userService;
 
     private User testUser;
-    private UserCreateDTO createDTO;
-    private UserUpdateDTO updateDTO;
+    private UserCreateDto createDTO;
+    private UserUpdateDto updateDTO;
 
     @BeforeEach
     void setUp() {
@@ -47,13 +47,13 @@ class UserServiceTest {
         testUser.setId("1");
         testUser.setOperator(false);
 
-        createDTO = new UserCreateDTO();
+        createDTO = new UserCreateDto();
         createDTO.setUsername("newuser");
         createDTO.setEmail("new@example.com");
         createDTO.setPassword("password123");
         createDTO.setOperator(false);
 
-        updateDTO = new UserUpdateDTO();
+        updateDTO = new UserUpdateDto();
         updateDTO.setUsername("updateduser");
         updateDTO.setEmail("updated@example.com");
         updateDTO.setPassword("newpassword");

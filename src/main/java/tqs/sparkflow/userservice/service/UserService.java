@@ -2,12 +2,10 @@ package tqs.sparkflow.userservice.service;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import tqs.sparkflow.userservice.dto.UserCreateDTO;
-import tqs.sparkflow.userservice.dto.UserUpdateDTO;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
@@ -32,25 +30,25 @@ public class UserService {
   /**
    * Creates a new user.
    *
-   * @param userDTO the user data to create
+   * @param userDto the user data to create
    * @return the created user
    * @throws DuplicateEmailException if the email already exists
    * @throws DuplicateUsernameException if the username already exists
    */
-  public User createUser(UserCreateDTO userDTO) {
-    if (userRepository.existsByEmail(userDTO.getEmail())) {
-      throw new DuplicateEmailException("Email already exists: " + userDTO.getEmail());
+  public User createUser(UserCreateDto userDto) {
+    if (userRepository.existsByEmail(userDto.getEmail())) {
+      throw new DuplicateEmailException("Email already exists: " + userDto.getEmail());
     }
     
-    if (userRepository.existsByUsername(userDTO.getUsername())) {
-      throw new DuplicateUsernameException("Username already exists: " + userDTO.getUsername());
+    if (userRepository.existsByUsername(userDto.getUsername())) {
+      throw new DuplicateUsernameException("Username already exists: " + userDto.getUsername());
     }
     
     User user = new User();
-    user.setUsername(userDTO.getUsername());
-    user.setEmail(userDTO.getEmail());
-    user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-    user.setOperator(userDTO.isOperator());
+    user.setUsername(userDto.getUsername());
+    user.setEmail(userDto.getEmail());
+    user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+    user.setOperator(userDto.isOperator());
     
     return userRepository.save(user);
   }
@@ -76,7 +74,7 @@ public class UserService {
    */
   public User getUserByEmail(String email) {
     return userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
   }
 
   /**
@@ -89,7 +87,7 @@ public class UserService {
    * @throws DuplicateEmailException if the new email already exists
    * @throws DuplicateUsernameException if the new username already exists
    */
-  public User updateUser(String id, UserUpdateDTO userDetails) {
+  public User updateUser(String id, UserUpdateDto userDetails) {
     User existingUser = getUserById(id);
 
     // Check if the new email is already taken by another user
@@ -103,9 +101,11 @@ public class UserService {
 
     // Check if the new username is already taken by another user
     if (userDetails.getUsername() != null) {
-      Optional<User> userWithSameUsername = userRepository.findByUsername(userDetails.getUsername());
+      Optional<User> userWithSameUsername = 
+          userRepository.findByUsername(userDetails.getUsername());
       if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(id)) {
-        throw new DuplicateUsernameException("Username already exists: " + userDetails.getUsername());
+        throw new DuplicateUsernameException(
+            "Username already exists: " + userDetails.getUsername());
       }
       existingUser.setUsername(userDetails.getUsername());
     }

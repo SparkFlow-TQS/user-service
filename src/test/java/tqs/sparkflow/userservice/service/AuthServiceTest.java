@@ -16,9 +16,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import tqs.sparkflow.userservice.dto.JwtResponseDTO;
-import tqs.sparkflow.userservice.dto.LoginDTO;
-import tqs.sparkflow.userservice.dto.RegisterDTO;
+import tqs.sparkflow.userservice.dto.JwtResponseDto;
+import tqs.sparkflow.userservice.dto.LoginDto;
+import tqs.sparkflow.userservice.dto.RegisterDto;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
@@ -45,8 +45,8 @@ class AuthServiceTest {
     private AuthService authService;
 
     private User testUser;
-    private LoginDTO loginDTO;
-    private RegisterDTO registerDTO;
+    private LoginDto loginDTO;
+    private RegisterDto registerDTO;
 
     @BeforeEach
     void setUp() {
@@ -57,11 +57,11 @@ class AuthServiceTest {
         testUser.setPassword("encodedPassword");
         testUser.setOperator(false);
 
-        loginDTO = new LoginDTO();
+        loginDTO = new LoginDto();
         loginDTO.setEmailOrUsername("test@example.com");
         loginDTO.setPassword("password123");
 
-        registerDTO = new RegisterDTO();
+        registerDTO = new RegisterDto();
         registerDTO.setEmail("test@example.com");
         registerDTO.setUsername("testuser");
         registerDTO.setPassword("password123");
@@ -80,7 +80,7 @@ class AuthServiceTest {
         when(jwtUtil.generateRefreshToken(anyString()))
             .thenReturn("refresh-token");
 
-        JwtResponseDTO result = authService.login(loginDTO);
+        JwtResponseDto result = authService.login(loginDTO);
 
         assertThat(result).isNotNull();
         assertThat(result.getAccessToken()).isEqualTo("access-token");
@@ -170,7 +170,7 @@ class AuthServiceTest {
         when(jwtUtil.generateRefreshToken(anyString()))
             .thenReturn("refresh-token");
 
-        JwtResponseDTO result = authService.login(loginDTO);
+        JwtResponseDto result = authService.login(loginDTO);
 
         assertThat(result).isNotNull();
         assertThat(result.getAccessToken()).isEqualTo("access-token");

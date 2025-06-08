@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tqs.sparkflow.userservice.dto.UserCreateDTO;
-import tqs.sparkflow.userservice.dto.UserUpdateDTO;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
 import tqs.sparkflow.userservice.model.User;
@@ -65,7 +65,7 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping
-  public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDTO userDto) {
+  public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDto userDto) {
     try {
       User savedUser = userService.createUser(userDto);
       return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
@@ -144,7 +144,7 @@ public class UserController {
   @PutMapping("/{id}")
   public ResponseEntity<User> updateUser(
         @Parameter(description = "ID of the user to update") @PathVariable String id,
-        @Valid @RequestBody UserUpdateDTO userDetails) {
+        @Valid @RequestBody UserUpdateDto userDetails) {
     try {
       User updatedUser = userService.updateUser(id, userDetails);
       return ResponseEntity.ok(updatedUser);

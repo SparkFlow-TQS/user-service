@@ -22,8 +22,8 @@ import io.restassured.specification.RequestSpecification;
 import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
-import tqs.sparkflow.userservice.dto.UserCreateDTO;
-import tqs.sparkflow.userservice.dto.UserUpdateDTO;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
 
@@ -78,7 +78,7 @@ class UserControllerIT {
 
     @Test
     void whenCreateUserWithValidData_thenReturnCreated() throws Exception {
-        UserCreateDTO createDTO = new UserCreateDTO();
+        UserCreateDto createDTO = new UserCreateDto();
         createDTO.setUsername("newuser");
         createDTO.setEmail("newuser@example.com");
         createDTO.setPassword("password123");
@@ -97,7 +97,7 @@ class UserControllerIT {
 
     @Test
     void whenCreateUserWithExistingEmail_thenReturnConflict() throws Exception {
-        UserCreateDTO createDTO = new UserCreateDTO();
+        UserCreateDto createDTO = new UserCreateDto();
         createDTO.setUsername("newuser");
         createDTO.setEmail("test@example.com"); // Email already exists
         createDTO.setPassword("password123");
@@ -113,7 +113,7 @@ class UserControllerIT {
 
     @Test
     void whenCreateUserWithInvalidData_thenReturnBadRequest() throws Exception {
-        UserCreateDTO createDTO = new UserCreateDTO();
+        UserCreateDto createDTO = new UserCreateDto();
         createDTO.setUsername(""); // Invalid username
         createDTO.setEmail("invalid-email"); // Invalid email
         createDTO.setPassword("123"); // Password too short
@@ -129,7 +129,7 @@ class UserControllerIT {
 
     @Test
     void whenCreateUserAsRegularUser_thenReturnForbidden() throws Exception {
-        UserCreateDTO createDTO = new UserCreateDTO();
+        UserCreateDto createDTO = new UserCreateDto();
         createDTO.setUsername("newuser");
         createDTO.setEmail("newuser@example.com");
         createDTO.setPassword("password123");
@@ -217,7 +217,7 @@ class UserControllerIT {
 
     @Test
     void whenUpdateUserWithValidData_thenReturnUpdatedUser() throws Exception {
-        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        UserUpdateDto updateDTO = new UserUpdateDto();
         updateDTO.setUsername("updateduser");
         updateDTO.setEmail("updated@example.com");
         updateDTO.setOperator(true);
@@ -235,7 +235,7 @@ class UserControllerIT {
 
     @Test
     void whenUpdateUserWithExistingEmail_thenReturnConflict() throws Exception {
-        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        UserUpdateDto updateDTO = new UserUpdateDto();
         updateDTO.setUsername("updateduser");
         updateDTO.setEmail("operator@example.com"); // Email already exists
         updateDTO.setOperator(false);
@@ -250,7 +250,7 @@ class UserControllerIT {
 
     @Test
     void whenUpdateNonExistentUser_thenReturnNotFound() throws Exception {
-        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        UserUpdateDto updateDTO = new UserUpdateDto();
         updateDTO.setUsername("updateduser");
         updateDTO.setEmail("updated@example.com");
         updateDTO.setOperator(false);
@@ -265,7 +265,7 @@ class UserControllerIT {
 
     @Test
     void whenUpdateUserAsRegularUser_thenReturnForbidden() throws Exception {
-        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        UserUpdateDto updateDTO = new UserUpdateDto();
         updateDTO.setUsername("updateduser");
         updateDTO.setEmail("updated@example.com");
         updateDTO.setOperator(false);

@@ -17,8 +17,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
-import tqs.sparkflow.userservice.dto.UserCreateDTO;
-import tqs.sparkflow.userservice.dto.UserUpdateDTO;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
@@ -60,7 +60,7 @@ class UserServiceIT {
 
     @Test
     void whenCreateUserWithValidData_thenReturnUser() {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
+        UserCreateDto userCreateDTO = new UserCreateDto();
         userCreateDTO.setUsername("newuser");
         userCreateDTO.setEmail("newuser@example.com");
         userCreateDTO.setPassword("password123");
@@ -77,7 +77,7 @@ class UserServiceIT {
 
     @Test
     void whenCreateUserWithExistingEmail_thenThrowException() {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
+        UserCreateDto userCreateDTO = new UserCreateDto();
         userCreateDTO.setUsername("anotheruser");
         userCreateDTO.setEmail("test@example.com"); // Same email as testUser
         userCreateDTO.setPassword("password123");
@@ -88,7 +88,7 @@ class UserServiceIT {
 
     @Test
     void whenCreateUserWithExistingUsername_thenThrowException() {
-        UserCreateDTO userCreateDTO = new UserCreateDTO();
+        UserCreateDto userCreateDTO = new UserCreateDto();
         userCreateDTO.setUsername("testuser"); // Same username as testUser
         userCreateDTO.setEmail("another@example.com");
         userCreateDTO.setPassword("password123");
@@ -147,7 +147,7 @@ class UserServiceIT {
 
     @Test
     void whenUpdateUserWithValidData_thenReturnUpdatedUser() {
-        UserUpdateDTO updateUserDTO = new UserUpdateDTO();
+        UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("updateduser");
         updateUserDTO.setEmail("updated@example.com");
         updateUserDTO.setPassword("newpassword123");
@@ -168,7 +168,7 @@ class UserServiceIT {
         User anotherUser = new User("anotheruser", "another@example.com", passwordEncoder.encode("password123"));
         anotherUser = userRepository.save(anotherUser);
 
-        UserUpdateDTO updateUserDTO = new UserUpdateDTO();
+        UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("testuser");
         updateUserDTO.setEmail("another@example.com"); // Try to use existing email
         updateUserDTO.setPassword("password123");
@@ -183,7 +183,7 @@ class UserServiceIT {
         User anotherUser = new User("anotheruser", "another@example.com", passwordEncoder.encode("password123"));
         anotherUser = userRepository.save(anotherUser);
 
-        UserUpdateDTO updateUserDTO = new UserUpdateDTO();
+        UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("anotheruser"); // Try to use existing username
 
         assertThatThrownBy(() -> userService.updateUser(testUser.getId(), updateUserDTO))
@@ -193,7 +193,7 @@ class UserServiceIT {
     @Test
     void whenUpdateNonExistentUser_thenThrowException() {
         String nonExistentId = "507f1f77bcf86cd799439011";
-        UserUpdateDTO updateUserDTO = new UserUpdateDTO();
+        UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("newusername");
         updateUserDTO.setEmail("new@example.com");
         updateUserDTO.setPassword("password123");
