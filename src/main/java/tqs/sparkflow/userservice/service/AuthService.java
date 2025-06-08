@@ -65,15 +65,17 @@ public class AuthService {
       throw new AuthenticationException(INVALID_CREDENTIALS);
     }
 
-    String accessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), user.isOperator());
+    String accessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), 
+        user.isOperator());
     String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
-    return new JwtResponseDto(accessToken, refreshToken, user.getUsername(), user.getEmail(), user.isOperator());
+    return new JwtResponseDto(accessToken, refreshToken, user.getUsername(), 
+        user.getEmail(), user.isOperator());
   }
 
   private void validateLoginInput(LoginDto loginDto) {
-    if (!StringUtils.hasText(loginDto.getEmailOrUsername()) || 
-        !StringUtils.hasText(loginDto.getPassword())) {
+    if (!StringUtils.hasText(loginDto.getEmailOrUsername()) 
+        || !StringUtils.hasText(loginDto.getPassword())) {
       throw new ValidationException(INVALID_CREDENTIALS);
     }
   }
@@ -111,10 +113,12 @@ public class AuthService {
     User user = userRepository.findByUsername(username)
         .orElseThrow(() -> new AuthenticationException(INVALID_REFRESH_TOKEN));
 
-    String newAccessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), user.isOperator());
+    String newAccessToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(), 
+        user.isOperator());
     String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
-    return new JwtResponseDto(newAccessToken, newRefreshToken, user.getUsername(), user.getEmail(), user.isOperator());
+    return new JwtResponseDto(newAccessToken, newRefreshToken, user.getUsername(), 
+        user.getEmail(), user.isOperator());
   }
 
   private void validateRegistrationInput(RegisterDto registerDto) {

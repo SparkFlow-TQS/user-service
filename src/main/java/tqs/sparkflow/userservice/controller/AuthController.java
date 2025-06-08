@@ -10,7 +10,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import tqs.sparkflow.userservice.dto.JwtResponseDto;
 import tqs.sparkflow.userservice.dto.LoginDto;
 import tqs.sparkflow.userservice.dto.RefreshTokenRequestDto;
@@ -53,12 +56,8 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping("/login")
-  public ResponseEntity<?> login(@Valid @RequestBody LoginDto loginDto) {
-    try {
-      return ResponseEntity.ok(authService.login(loginDto));
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
-    }
+  public ResponseEntity<JwtResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
+    return ResponseEntity.ok(authService.login(loginDto));
   }
 
   /**
@@ -102,11 +101,7 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping("/register")
-  public ResponseEntity<?> register(@Valid @RequestBody RegisterDto registerDto) {
-    try {
-      return ResponseEntity.ok(authService.register(registerDto));
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
-    }
+  public ResponseEntity<User> register(@Valid @RequestBody RegisterDto registerDto) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(registerDto));
   }
 } 
