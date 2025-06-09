@@ -55,21 +55,27 @@ class JwtAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void whenNoAuthorizationHeader_thenContinueFilterChain() throws ServletException, IOException {
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        verify(jwtUtil, never()).extractUsername(anyString());
-        verify(userDetailsService, never()).loadUserByUsername(anyString());
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    private static Stream<Arguments> invalidAuthorizationHeaderProvider() {
+        return Stream.of(
+            Arguments.of(null, "no authorization header"),
+            Arguments.of("Basic sometoken", "authorization header without Bearer"),
+            Arguments.of("Bearer ", "empty Bearer token"),
+            Arguments.of("Bearer    ", "Bearer token with only spaces")
+        );
     }
 
-    @Test
-    void whenAuthorizationHeaderWithoutBearer_thenContinueFilterChain() throws ServletException, IOException {
-        request.addHeader("Authorization", "Basic sometoken");
+    @ParameterizedTest
+    @MethodSource("invalidAuthorizationHeaderProvider")
+    void whenInvalidAuthorizationHeader_thenContinueFilterChain(String authHeader, String description) throws ServletException, IOException {
+        // Given
+        if (authHeader != null) {
+            request.addHeader("Authorization", authHeader);
+        }
 
+        // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
+        // Then
         verify(jwtUtil, never()).extractUsername(anyString());
         verify(userDetailsService, never()).loadUserByUsername(anyString());
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
@@ -172,25 +178,4 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
-    @Test
-    void whenBearerTokenIsEmpty_thenContinueFilterChain() throws ServletException, IOException {
-        request.addHeader("Authorization", "Bearer ");
-
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        verify(jwtUtil, never()).extractUsername(anyString());
-        verify(userDetailsService, never()).loadUserByUsername(anyString());
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-    }
-
-    @Test
-    void whenBearerTokenIsOnlySpaces_thenContinueFilterChain() throws ServletException, IOException {
-        request.addHeader("Authorization", "Bearer    ");
-
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        verify(jwtUtil, never()).extractUsername(anyString());
-        verify(userDetailsService, never()).loadUserByUsername(anyString());
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-    }
 } 
