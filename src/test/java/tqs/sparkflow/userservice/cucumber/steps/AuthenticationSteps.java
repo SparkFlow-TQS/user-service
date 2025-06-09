@@ -46,6 +46,9 @@ public class AuthenticationSteps {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private SharedTestContext sharedContext;
+
     private ResponseEntity<String> response;
     private String registrationJson;
     private String loginJson;
@@ -188,10 +191,6 @@ public class AuthenticationSteps {
                 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
-                // Set content length to avoid streaming mode issues
-                if (loginJson != null) {
-                    headers.setContentLength(loginJson.getBytes().length);
-                }
                 HttpEntity<String> entity = new HttpEntity<>(loginJson, headers);
                 response = restTemplate.postForEntity(baseUrl + "/api/v1/auth/login", entity, String.class);
                 
@@ -287,10 +286,6 @@ public class AuthenticationSteps {
             """, uniqueUsername, uniqueEmail);
             
             HttpHeaders headers = createAuthenticatedHeaders();
-            // Set content length to avoid streaming mode issues
-            if (newUserJson != null) {
-                headers.setContentLength(newUserJson.getBytes().length);
-            }
             HttpEntity<String> entity = new HttpEntity<>(newUserJson, headers);
             response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
         } catch (Exception e) {
@@ -546,7 +541,10 @@ public class AuthenticationSteps {
 
     @Then("I should receive an unauthorized error")
     public void i_should_receive_an_unauthorized_error() {
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        // Use shared context if local response is null
+        ResponseEntity<String> responseToCheck = response != null ? response : sharedContext.getLastResponse();
+        assertThat(responseToCheck).isNotNull();
+        assertThat(responseToCheck.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Then("the user should be updated successfully")
@@ -575,10 +573,6 @@ public class AuthenticationSteps {
                 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
-                // Set content length to avoid streaming mode issues
-                if (loginRequest != null) {
-                    headers.setContentLength(loginRequest.getBytes().length);
-                }
                 HttpEntity<String> entity = new HttpEntity<>(loginRequest, headers);
                 ResponseEntity<String> loginResponse = restTemplate.postForEntity(
                     baseUrl + "/api/v1/auth/login", entity, String.class);

@@ -40,6 +40,9 @@ public class UserSteps {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private SharedTestContext sharedContext;
+
     private ResponseEntity<String> response;
     private String userJson;
     private String lastCreatedUsername;
@@ -345,6 +348,9 @@ public class UserSteps {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(userJson, headers);
         response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
+        
+        // Store in shared context so other step classes can access it
+        sharedContext.setLastResponse(response);
     }
 
 
