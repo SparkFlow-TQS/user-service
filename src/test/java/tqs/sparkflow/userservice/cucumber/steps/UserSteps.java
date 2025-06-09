@@ -137,8 +137,10 @@ public class UserSteps {
             }
             
             logger.info("Successfully authenticated as admin");
-        } catch (org.springframework.web.client.RestClientException | 
-                 java.lang.RuntimeException e) {
+        } catch (org.springframework.web.client.RestClientException e) {
+            logger.error("Error during authentication test: {}", e.getMessage(), e);
+            throw new RuntimeException("Error during authentication test: " + e.getMessage(), e);
+        } catch (java.lang.RuntimeException e) {
             logger.error("Error during authentication test: {}", e.getMessage(), e);
             throw new RuntimeException("Error during authentication test: " + e.getMessage(), e);
         }

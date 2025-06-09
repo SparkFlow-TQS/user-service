@@ -211,8 +211,7 @@ public class AuthenticationSteps {
                 // If we get here without exception, break the retry loop
                 break;
                 
-            } catch (org.springframework.web.client.RestClientException | 
-                     java.lang.RuntimeException e) {
+            } catch (org.springframework.web.client.RestClientException e) {
                 logger.error("Error during login attempt {}: {}", attempt, e.getMessage());
                 
                 if (attempt >= maxRetries) {
@@ -586,8 +585,7 @@ public class AuthenticationSteps {
                 // If we get here without exception, break the retry loop
                 break;
                 
-            } catch (org.springframework.web.client.RestClientException | 
-                     java.lang.RuntimeException e) {
+            } catch (org.springframework.web.client.RestClientException e) {
                 logger.error("Error during helper login attempt {} for user {}: {}", attempt, username, e.getMessage());
                 
                 if (attempt >= maxRetries) {
