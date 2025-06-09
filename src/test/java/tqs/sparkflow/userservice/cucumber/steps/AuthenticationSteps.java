@@ -67,7 +67,10 @@ public class AuthenticationSteps {
     @Before
     public void cleanDatabase() {
         try {
-            mongoTemplate.dropCollection("users");
+            // Clean up more thoroughly
+            if (mongoTemplate.collectionExists("users")) {
+                mongoTemplate.dropCollection("users");
+            }
             userTokens.clear();
             refreshTokens.clear();
             currentUserToken = null;
@@ -75,6 +78,9 @@ public class AuthenticationSteps {
             currentUsername = null;
             currentUserIsOperator = false;
             response = null;
+            
+            // Small delay to ensure cleanup is complete
+            Thread.sleep(100);
         } catch (Exception e) {
             logger.warn("Error cleaning database: {}", e.getMessage());
         }
@@ -172,23 +178,50 @@ public class AuthenticationSteps {
 
     @When("I login with correct credentials")
     public void i_login_with_correct_credentials() {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(loginJson, headers);
-            response = restTemplate.postForEntity(baseUrl + "/api/v1/auth/login", entity, String.class);
-            
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                currentUserToken = extractTokenFromResponse(response.getBody());
-                currentRefreshToken = extractRefreshTokenFromResponse(response.getBody());
-                if (currentUserToken != null && currentUsername != null) {
-                    userTokens.put(currentUsername, currentUserToken);
-                    refreshTokens.put(currentUsername, currentRefreshToken);
+        int maxRetries = 3;
+        int attempt = 0;
+        
+        while (attempt < maxRetries) {
+            try {
+                attempt++;
+                logger.info("Login attempt {} of {}", attempt, maxRetries);
+                
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                // Set content length to avoid streaming mode issues
+                if (loginJson != null) {
+                    headers.setContentLength(loginJson.getBytes().length);
+                }
+                HttpEntity<String> entity = new HttpEntity<>(loginJson, headers);
+                response = restTemplate.postForEntity(baseUrl + "/api/v1/auth/login", entity, String.class);
+                
+                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                    currentUserToken = extractTokenFromResponse(response.getBody());
+                    currentRefreshToken = extractRefreshTokenFromResponse(response.getBody());
+                    if (currentUserToken != null && currentUsername != null) {
+                        userTokens.put(currentUsername, currentUserToken);
+                        refreshTokens.put(currentUsername, currentRefreshToken);
+                    }
+                }
+                
+                // If we get here without exception, break the retry loop
+                break;
+                
+            } catch (Exception e) {
+                logger.error("Error during login attempt {}: {}", attempt, e.getMessage());
+                
+                if (attempt >= maxRetries) {
+                    logger.error("Max login attempts reached, failing test");
+                    response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                } else {
+                    try {
+                        Thread.sleep(500); // Wait before retry
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
                 }
             }
-        } catch (Exception e) {
-            logger.error("Error during login: {}", e.getMessage());
-            response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -239,16 +272,25 @@ public class AuthenticationSteps {
     @When("I try to create a new user account")
     public void i_try_to_create_a_new_user_account() {
         try {
-            String newUserJson = """
+            // Generate unique username and email to avoid conflicts
+            long timestamp = System.currentTimeMillis();
+            String uniqueUsername = "newuser" + timestamp;
+            String uniqueEmail = "new" + timestamp + "@test.com";
+            
+            String newUserJson = String.format("""
             {
-                "username": "newuser",
-                "email": "new@test.com",
+                "username": "%s",
+                "email": "%s",
                 "password": "password123",
                 "operator": false
             }
-            """;
+            """, uniqueUsername, uniqueEmail);
             
             HttpHeaders headers = createAuthenticatedHeaders();
+            // Set content length to avoid streaming mode issues
+            if (newUserJson != null) {
+                headers.setContentLength(newUserJson.getBytes().length);
+            }
             HttpEntity<String> entity = new HttpEntity<>(newUserJson, headers);
             response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
         } catch (Exception e) {
@@ -523,15 +565,47 @@ public class AuthenticationSteps {
         }
         """, username, password);
         
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(loginRequest, headers);
-        ResponseEntity<String> loginResponse = restTemplate.postForEntity(
-            baseUrl + "/api/v1/auth/login", entity, String.class);
+        int maxRetries = 3;
+        int attempt = 0;
         
-        if (loginResponse.getStatusCode() == HttpStatus.OK) {
-            currentUserToken = extractTokenFromResponse(loginResponse.getBody());
-            currentRefreshToken = extractRefreshTokenFromResponse(loginResponse.getBody());
+        while (attempt < maxRetries) {
+            try {
+                attempt++;
+                logger.info("Helper login attempt {} of {} for user {}", attempt, maxRetries, username);
+                
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                // Set content length to avoid streaming mode issues
+                if (loginRequest != null) {
+                    headers.setContentLength(loginRequest.getBytes().length);
+                }
+                HttpEntity<String> entity = new HttpEntity<>(loginRequest, headers);
+                ResponseEntity<String> loginResponse = restTemplate.postForEntity(
+                    baseUrl + "/api/v1/auth/login", entity, String.class);
+                
+                if (loginResponse.getStatusCode() == HttpStatus.OK) {
+                    currentUserToken = extractTokenFromResponse(loginResponse.getBody());
+                    currentRefreshToken = extractRefreshTokenFromResponse(loginResponse.getBody());
+                }
+                
+                // If we get here without exception, break the retry loop
+                break;
+                
+            } catch (Exception e) {
+                logger.error("Error during helper login attempt {} for user {}: {}", attempt, username, e.getMessage());
+                
+                if (attempt >= maxRetries) {
+                    logger.error("Max helper login attempts reached for user {}", username);
+                    throw new RuntimeException("Failed to login user after " + maxRetries + " attempts: " + username, e);
+                } else {
+                    try {
+                        Thread.sleep(500); // Wait before retry
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
         }
     }
 

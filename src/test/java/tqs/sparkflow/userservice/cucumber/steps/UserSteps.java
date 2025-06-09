@@ -56,11 +56,17 @@ public class UserSteps {
     @Before
     public void cleanDatabase() {
         try {
-            mongoTemplate.dropCollection("users");
+            // Clean up more thoroughly
+            if (mongoTemplate.collectionExists("users")) {
+                mongoTemplate.dropCollection("users");
+            }
             response = null;
             userJson = null;
             lastCreatedUsername = null;
             jwtToken = null;
+            
+            // Small delay to ensure cleanup is complete
+            Thread.sleep(100);
         } catch (Exception e) {
             logger.warn("Error cleaning database: {}", e.getMessage());
         }
