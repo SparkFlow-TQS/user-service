@@ -166,28 +166,30 @@ class UserServiceIT {
     void whenUpdateUserWithExistingEmail_thenThrowException() {
         // Create another user
         User anotherUser = new User("anotheruser", "another@example.com", passwordEncoder.encode("password123"));
-        anotherUser = userRepository.save(anotherUser);
+        userRepository.save(anotherUser);
 
         UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("testuser");
         updateUserDTO.setEmail("another@example.com"); // Try to use existing email
         updateUserDTO.setPassword("password123");
 
-        assertThatThrownBy(() -> userService.updateUser(testUser.getId(), updateUserDTO))
-                .isInstanceOf(DuplicateEmailException.class);
+        assertThatThrownBy(() -> {
+            userService.updateUser(testUser.getId(), updateUserDTO);
+        }).isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test
     void whenUpdateUserWithExistingUsername_thenThrowException() {
         // Create another user
         User anotherUser = new User("anotheruser", "another@example.com", passwordEncoder.encode("password123"));
-        anotherUser = userRepository.save(anotherUser);
+        userRepository.save(anotherUser);
 
         UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("anotheruser"); // Try to use existing username
 
-        assertThatThrownBy(() -> userService.updateUser(testUser.getId(), updateUserDTO))
-                .isInstanceOf(DuplicateUsernameException.class);
+        assertThatThrownBy(() -> {
+            userService.updateUser(testUser.getId(), updateUserDTO);
+        }).isInstanceOf(DuplicateUsernameException.class);
     }
 
     @Test

@@ -255,7 +255,7 @@ class AuthControllerIT {
     }
 
     @Test
-    void whenAccessProtectedEndpointWithInvalidToken_thenReturnUnauthorized() throws Exception {
+    void whenAccessProtectedEndpointWithInvalidToken_thenReturnUnauthorized() {
         given()
             .header("Authorization", "Bearer invalid.token.here")
         .when()
@@ -265,7 +265,7 @@ class AuthControllerIT {
     }
 
     @Test
-    void whenAccessProtectedEndpointWithoutToken_thenReturnUnauthorized() throws Exception {
+    void whenAccessProtectedEndpointWithoutToken_thenReturnUnauthorized() {
         given()
         .when()
             .get("/api/v1/users/{id}", testUser.getId())
@@ -274,7 +274,7 @@ class AuthControllerIT {
     }
 
     @Test
-    void whenAccessProtectedEndpointWithExpiredToken_thenReturnUnauthorized() throws Exception {
+    void whenAccessProtectedEndpointWithExpiredToken_thenReturnUnauthorized() {
         // Create an expired token - need to create a custom method for this test
         // For now, we'll test with an obviously invalid token format
         String expiredToken = "expired.token.here";

@@ -5,16 +5,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockFilterChain;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -64,8 +59,9 @@ class SecurityConfigTest {
         String rawPassword = "testPassword123";
         String encodedPassword = encoder.encode(rawPassword);
         
-        assertThat(encodedPassword).isNotNull();
-        assertThat(encodedPassword).isNotEqualTo(rawPassword);
+        assertThat(encodedPassword)
+            .isNotNull()
+            .isNotEqualTo(rawPassword);
         assertThat(encoder.matches(rawPassword, encodedPassword)).isTrue();
         assertThat(encoder.matches("wrongPassword", encodedPassword)).isFalse();
     }
@@ -80,8 +76,9 @@ class SecurityConfigTest {
         AuthenticationManager result = securityConfig.authenticationManager(authenticationConfiguration);
 
         // Then
-        assertThat(result).isNotNull();
-        assertThat(result).isEqualTo(authenticationManager);
+        assertThat(result)
+            .isNotNull()
+            .isEqualTo(authenticationManager);
     }
 
     @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
