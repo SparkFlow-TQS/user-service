@@ -40,8 +40,9 @@ class JwtUtilTest {
     void whenGenerateToken_thenReturnValidToken() {
         String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
         
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
+        assertThat(token)
+            .isNotNull()
+            .isNotEmpty();
         assertThat(token.split("\\.")).hasSize(3); // JWT has 3 parts separated by dots
     }
 
@@ -49,8 +50,9 @@ class JwtUtilTest {
     void whenGenerateRefreshToken_thenReturnValidToken() {
         String refreshToken = jwtUtil.generateRefreshToken(testUser.getUsername());
         
-        assertThat(refreshToken).isNotNull();
-        assertThat(refreshToken).isNotEmpty();
+        assertThat(refreshToken)
+            .isNotNull()
+            .isNotEmpty();
         assertThat(refreshToken.split("\\.")).hasSize(3);
     }
 
@@ -247,7 +249,8 @@ class JwtUtilTest {
     void whenValidateTokenWithExceptionsWithInvalidToken_thenThrowException() {
         String invalidToken = "invalid.token.format";
         
-        assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(invalidToken, testUser.getUsername()))
+        String username = testUser.getUsername();
+        assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(invalidToken, username))
             .isInstanceOf(MalformedJwtException.class);
     }
 
@@ -258,7 +261,8 @@ class JwtUtilTest {
         
         String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
         
-        assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(token, testUser.getUsername()))
+        String username = testUser.getUsername();
+        assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(token, username))
             .isInstanceOf(ExpiredJwtException.class);
     }
 } 

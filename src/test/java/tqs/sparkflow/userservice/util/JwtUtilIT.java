@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -58,8 +59,9 @@ class JwtUtilIT {
     void whenGenerateToken_thenReturnValidToken() {
         String token = jwtUtil.generateToken(testUsername, testEmail, isOperator);
 
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
+        assertThat(token)
+            .isNotNull()
+            .isNotEmpty();
         assertThat(jwtUtil.extractUsername(token)).isEqualTo(testUsername);
         assertThat(jwtUtil.extractEmail(token)).isEqualTo(testEmail);
         assertThat(jwtUtil.extractIsOperator(token)).isEqualTo(isOperator);
@@ -69,8 +71,9 @@ class JwtUtilIT {
     void whenGenerateRefreshToken_thenReturnValidRefreshToken() {
         String token = jwtUtil.generateRefreshToken(testUsername);
 
-        assertThat(token).isNotNull();
-        assertThat(token).isNotEmpty();
+        assertThat(token)
+            .isNotNull()
+            .isNotEmpty();
         assertThat(jwtUtil.extractUsername(token)).isEqualTo(testUsername);
         assertThat(jwtUtil.isRefreshToken(token)).isTrue();
     }
@@ -140,7 +143,7 @@ class JwtUtilIT {
 
     @Test
     void whenExtractClaimFromToken_thenReturnCorrectClaim() {
-        String subject = jwtUtil.extractClaim(validToken, claims -> claims.getSubject());
+        String subject = jwtUtil.extractClaim(validToken, Claims::getSubject);
 
         assertThat(subject).isEqualTo(testUsername);
     }

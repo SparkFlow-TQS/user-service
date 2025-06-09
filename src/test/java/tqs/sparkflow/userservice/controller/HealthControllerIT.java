@@ -38,7 +38,7 @@ class HealthControllerIT {
     }
 
     @Test
-    void whenGetHealth_thenReturnHealthy() throws Exception {
+    void whenGetHealth_thenReturnHealthy() {
         given()
         .when()
             .get("/api/v1/health")

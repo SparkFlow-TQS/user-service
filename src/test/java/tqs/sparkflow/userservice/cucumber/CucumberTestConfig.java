@@ -30,7 +30,7 @@ public class CucumberTestConfig {
   public TestRestTemplate testRestTemplate() {
     // Use Apache HttpClient instead of default Java HTTP client to avoid streaming mode issues
     RequestConfig config = RequestConfig.custom()
-        .setConnectTimeout(Timeout.ofSeconds(30))
+        .setConnectionRequestTimeout(Timeout.ofSeconds(30))
         .setResponseTimeout(Timeout.ofSeconds(30))
         .build();
     
@@ -51,7 +51,7 @@ public class CucumberTestConfig {
   public RestTemplate restTemplate() {
     // Use Apache HttpClient for regular RestTemplate as well
     RequestConfig config = RequestConfig.custom()
-        .setConnectTimeout(Timeout.ofSeconds(30))
+        .setConnectionRequestTimeout(Timeout.ofSeconds(30))
         .setResponseTimeout(Timeout.ofSeconds(30))
         .build();
     

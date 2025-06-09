@@ -1,7 +1,6 @@
 package tqs.sparkflow.userservice.controller;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -179,7 +178,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetUserById_thenReturnUser() throws Exception {
+    void whenGetUserById_thenReturnUser() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users/{id}", testUser.getId())
@@ -191,7 +190,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetUserByNonExistentId_thenReturnNotFound() throws Exception {
+    void whenGetUserByNonExistentId_thenReturnNotFound() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
@@ -200,7 +199,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetUserByIdAsRegularUser_thenReturnForbidden() throws Exception {
+    void whenGetUserByIdAsRegularUser_thenReturnForbidden() {
         userRequestSpec
         .when()
             .get("/api/v1/users/{id}", testUser.getId())
@@ -209,7 +208,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetUserByEmail_thenReturnUser() throws Exception {
+    void whenGetUserByEmail_thenReturnUser() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users/email/{email}", "test@example.com")
@@ -221,7 +220,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetUserByNonExistentEmail_thenReturnNotFound() throws Exception {
+    void whenGetUserByNonExistentEmail_thenReturnNotFound() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users/email/{email}", "nonexistent@example.com")
@@ -230,7 +229,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetAllUsers_thenReturnUserList() throws Exception {
+    void whenGetAllUsers_thenReturnUserList() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users")
@@ -242,7 +241,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetAllUsersAsRegularUser_thenReturnForbidden() throws Exception {
+    void whenGetAllUsersAsRegularUser_thenReturnForbidden() {
         userRequestSpec
         .when()
             .get("/api/v1/users")
@@ -314,7 +313,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenDeleteUser_thenReturnNoContent() throws Exception {
+    void whenDeleteUser_thenReturnNoContent() {
         operatorRequestSpec
         .when()
             .delete("/api/v1/users/{id}", testUser.getId())
@@ -323,7 +322,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenDeleteNonExistentUser_thenReturnNotFound() throws Exception {
+    void whenDeleteNonExistentUser_thenReturnNotFound() {
         operatorRequestSpec
         .when()
             .delete("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
@@ -332,7 +331,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenDeleteUserAsRegularUser_thenReturnForbidden() throws Exception {
+    void whenDeleteUserAsRegularUser_thenReturnForbidden() {
         userRequestSpec
         .when()
             .delete("/api/v1/users/{id}", testUser.getId())
@@ -345,7 +344,7 @@ class UserControllerIT {
     // This endpoint doesn't exist in UserController - removing test
 
     @Test
-    void whenAccessProtectedEndpointWithoutAuthentication_thenReturnUnauthorized() throws Exception {
+    void whenAccessProtectedEndpointWithoutAuthentication_thenReturnUnauthorized() {
         given()
             .contentType(MediaType.APPLICATION_JSON_VALUE)
         .when()
@@ -355,7 +354,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetProfileAsOperator_thenReturnProfileInfo() throws Exception {
+    void whenGetProfileAsOperator_thenReturnProfileInfo() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users/profile")
@@ -366,7 +365,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenGetProfileAsUser_thenReturnProfileInfo() throws Exception {
+    void whenGetProfileAsUser_thenReturnProfileInfo() {
         userRequestSpec
         .when()
             .get("/api/v1/users/profile")
@@ -377,7 +376,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenAccessTestEndpointAsOperator_thenReturnTestMessage() throws Exception {
+    void whenAccessTestEndpointAsOperator_thenReturnTestMessage() {
         operatorRequestSpec
         .when()
             .get("/api/v1/users/test")
@@ -388,7 +387,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenAccessTestEndpointAsUser_thenReturnTestMessage() throws Exception {
+    void whenAccessTestEndpointAsUser_thenReturnTestMessage() {
         userRequestSpec
         .when()
             .get("/api/v1/users/test")
@@ -399,7 +398,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenAccessProfileWithoutAuthentication_thenReturnUnauthorized() throws Exception {
+    void whenAccessProfileWithoutAuthentication_thenReturnUnauthorized() {
         given()
             .contentType(MediaType.APPLICATION_JSON_VALUE)
         .when()
@@ -409,7 +408,7 @@ class UserControllerIT {
     }
 
     @Test
-    void whenAccessTestEndpointWithoutAuthentication_thenReturnUnauthorized() throws Exception {
+    void whenAccessTestEndpointWithoutAuthentication_thenReturnUnauthorized() {
         given()
             .contentType(MediaType.APPLICATION_JSON_VALUE)
         .when()
