@@ -10,7 +10,11 @@ import org.springframework.test.context.DynamicPropertySource;
 public abstract class AbstractMongoTest {
 
     @Container
-    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
+    public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0")
+        .withReuse(true)
+        .withExposedPorts(27017)
+        .withStartupTimeout(java.time.Duration.ofSeconds(60))
+        .withStartupAttempts(3);
 
     static {
         mongoDBContainer.start();
@@ -19,5 +23,10 @@ public abstract class AbstractMongoTest {
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("spring.data.mongodb.database", () -> "test");
+        registry.add("spring.data.mongodb.auto-index-creation", () -> true);
+        registry.add("spring.data.mongodb.connect-timeout", () -> 30000);
+        registry.add("spring.data.mongodb.socket-timeout", () -> 30000);
+        registry.add("spring.data.mongodb.max-wait-time", () -> 30000);
     }
 }

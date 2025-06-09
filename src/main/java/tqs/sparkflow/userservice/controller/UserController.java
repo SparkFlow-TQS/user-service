@@ -1,28 +1,37 @@
 package tqs.sparkflow.userservice.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import tqs.sparkflow.userservice.model.User;
-import tqs.sparkflow.userservice.dto.UserCreateDTO;
-import tqs.sparkflow.userservice.dto.UserUpdateDTO;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
 import tqs.sparkflow.userservice.exception.ResourceNotFoundException;
+import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.service.UserService;
-
-
-import java.util.List;
 
 /**
  * REST controller for managing users.
@@ -32,32 +41,38 @@ import java.util.List;
 @RequestMapping("/users")
 @Validated
 @Tag(name = "User Management", description = "APIs for managing users")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
+  private static final String USER_NOT_FOUND_DESC = "User not found";
+  private static final String EMAIL_ALREADY_EXISTS_DESC = "Email already exists";
+  
   private final UserService userService;
 
-  public UserController(UserService userService) {
+  public UserController(final UserService userService) {
     this.userService = userService;
   }
 
   /**
    * Creates a new user.
    *
-   * @param userDTO the user data to create
+   * @param userDto the user data to create
    * @return the created user with HTTP 201 status
    * @throws DuplicateEmailException if the email already exists
    */
-  @Operation(summary = "Create a new user", description = "Creates a new user with the provided details")
+  @Operation(summary = "Create a new user", 
+             description = "Creates a new user with the provided details")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "User created successfully",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "409", description = "Email already exists"),
+      @ApiResponse(responseCode = "409", description = EMAIL_ALREADY_EXISTS_DESC),
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping
-  public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDTO userDTO) {
+  @PreAuthorize("hasRole('OPERATOR')")
+  public ResponseEntity<User> createUser(@Valid @RequestBody UserCreateDto userDto) {
     try {
-      User savedUser = userService.createUser(userDTO);
+      User savedUser = userService.createUser(userDto);
       return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     } catch (DuplicateEmailException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -71,13 +86,15 @@ public class UserController {
    * @return the user with HTTP 200 status
    * @throws ResourceNotFoundException if the user is not found
    */
-  @Operation(summary = "Get user by ID", description = "Retrieves a user by their unique identifier")
+  @Operation(summary = "Get user by ID", 
+             description = "Retrieves a user by their unique identifier")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "User found",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC)
   })
   @GetMapping("/{id}")
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<User> getUserById(
         @Parameter(description = "ID of the user to retrieve") @PathVariable String id) {
     try {
@@ -95,11 +112,12 @@ public class UserController {
    * @return the user with HTTP 200 status
    * @throws ResourceNotFoundException if the user is not found
    */
-  @Operation(summary = "Get user by email", description = "Retrieves a user by their email address")
+  @Operation(summary = "Get user by email", 
+             description = "Retrieves a user by their email address")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "User found",
-      content = @Content(schema = @Schema(implementation = User.class))),
-    @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "200", description = "User found",
+        content = @Content(schema = @Schema(implementation = User.class))),
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC)
   })
   @GetMapping("/email/{email}")
   public ResponseEntity<User> getUserByEmail(
@@ -125,14 +143,15 @@ public class UserController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "User updated successfully",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "404", description = "User not found"),
-      @ApiResponse(responseCode = "409", description = "Email already exists"),
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC),
+      @ApiResponse(responseCode = "409", description = EMAIL_ALREADY_EXISTS_DESC),
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PutMapping("/{id}")
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<User> updateUser(
         @Parameter(description = "ID of the user to update") @PathVariable String id,
-        @Valid @RequestBody UserUpdateDTO userDetails) {
+        @Valid @RequestBody UserUpdateDto userDetails) {
     try {
       User updatedUser = userService.updateUser(id, userDetails);
       return ResponseEntity.ok(updatedUser);
@@ -153,9 +172,10 @@ public class UserController {
   @Operation(summary = "Delete user", description = "Deletes a user by their ID")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-      @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC)
   })
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<Void> deleteUser(
         @Parameter(description = "ID of the user to delete") @PathVariable String id) {
     try {
@@ -177,8 +197,53 @@ public class UserController {
             content = @Content(schema = @Schema(implementation = User.class)))
   })
   @GetMapping
+  @PreAuthorize("hasRole('OPERATOR')")
   public ResponseEntity<List<User>> getAllUsers() {
     List<User> users = userService.getAllUsers();
     return ResponseEntity.ok(users);
+  }
+
+  /**
+   * Gets the current user's profile information.
+   *
+   * @return the user's profile information with HTTP 200 status
+   */
+  @Operation(summary = "Get user profile", 
+             description = "Gets the current user's profile information")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized")
+  })
+  @GetMapping("/profile")
+  public ResponseEntity<Map<String, Object>> getProfile() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+    Map<String, Object> profile = new HashMap<>();
+    profile.put("username", authentication.getName());
+    profile.put("authorities", authentication.getAuthorities());
+    profile.put("authenticated", authentication.isAuthenticated());
+    
+    return ResponseEntity.ok(profile);
+  }
+
+  /**
+   * Tests JWT authentication on a protected endpoint.
+   *
+   * @return a test response with HTTP 200 status if authenticated
+   */
+  @Operation(summary = "Test protected endpoint", description = "Tests JWT authentication")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Access granted"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized")
+  })
+  @GetMapping("/test")
+  public ResponseEntity<Map<String, String>> test() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    
+    Map<String, String> response = new HashMap<>();
+    response.put("message", "Access granted to protected endpoint");
+    response.put("user", authentication.getName());
+    
+    return ResponseEntity.ok(response);
   }
 } 

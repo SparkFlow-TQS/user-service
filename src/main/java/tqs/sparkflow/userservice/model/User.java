@@ -1,15 +1,15 @@
 package tqs.sparkflow.userservice.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "users")
 @Data
@@ -36,13 +36,28 @@ public class User {
   @Field("is_operator")
   private boolean isOperator;
    
+  /**
+   * Constructor for creating a user with default operator status (false).
+   *
+   * @param username the username
+   * @param email the email
+   * @param password the password
+   */
   public User(String username, String email, String password) {
     this.username = username;
     this.email = email;
     this.password = password;
     this.isOperator = false;
   }
-   
+
+  /**
+   * Constructor for creating a user with specified operator status.
+   *
+   * @param username the username
+   * @param email the email
+   * @param password the password
+   * @param isOperator the operator status
+   */
   public User(String username, String email, String password, boolean isOperator) {
     this.username = username;
     this.email = email;

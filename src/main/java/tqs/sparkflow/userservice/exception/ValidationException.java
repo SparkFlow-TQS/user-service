@@ -1,7 +1,15 @@
 package tqs.sparkflow.userservice.exception;
 
-public class ValidationException extends RuntimeException {
-    public ValidationException(String message) {
-        super(message);
-    }
+/**
+ * Exception thrown when validation fails.
+ */
+public class ValidationException extends BaseUserServiceException {
+  /**
+   * Constructor with message.
+   *
+   * @param message the error message
+   */
+  public ValidationException(String message) {
+    super(message);
+  }
 } 

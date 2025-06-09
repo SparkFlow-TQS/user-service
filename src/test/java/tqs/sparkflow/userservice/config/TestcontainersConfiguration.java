@@ -6,15 +6,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
+import org.springframework.context.annotation.Profile;
+import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration
+@Profile("test")
 public class TestcontainersConfiguration {
 
     private static final MongoDBContainer mongoDBContainer;
 
     static {
-        mongoDBContainer = new MongoDBContainer("mongo:6.0.2")
-            .withReuse(true);
+        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:7.0"))
+            .withReuse(false) // Disable reuse in CI environments
+            .withExposedPorts(27017)
+            .withStartupTimeout(java.time.Duration.ofSeconds(120)) // Increased timeout for CI
+            .withStartupAttempts(5); // More attempts for CI
+        
         mongoDBContainer.start();
     }
 
@@ -26,8 +33,12 @@ public class TestcontainersConfiguration {
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getConnectionString);
         registry.add("spring.data.mongodb.database", () -> "test");
         registry.add("spring.data.mongodb.auto-index-creation", () -> true);
+        registry.add("spring.data.mongodb.connect-timeout", () -> 30000);
+        registry.add("spring.data.mongodb.socket-timeout", () -> 30000);
+        registry.add("spring.data.mongodb.max-wait-time", () -> 30000);
+        registry.add("spring.data.mongodb.server-selection-timeout", () -> 30000);
     }
 } 

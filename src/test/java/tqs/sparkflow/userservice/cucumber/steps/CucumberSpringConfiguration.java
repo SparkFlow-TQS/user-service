@@ -4,6 +4,7 @@ import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import tqs.sparkflow.userservice.config.TestConfig;
+import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
 import tqs.sparkflow.userservice.config.WebConfig;
 import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.cucumber.CucumberTestConfig;
@@ -16,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
     classes = {
         UserServiceApplication.class,
         TestConfig.class,
+        TestcontainersConfiguration.class,
         WebConfig.class,
         CucumberTestConfig.class
     },

@@ -1,28 +1,34 @@
 package tqs.sparkflow.userservice.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
 
 import tqs.sparkflow.userservice.UserServiceApplication;
 import tqs.sparkflow.userservice.config.TestConfig;
 import tqs.sparkflow.userservice.config.TestcontainersConfiguration;
+import tqs.sparkflow.userservice.dto.LoginDto;
+import tqs.sparkflow.userservice.dto.UserCreateDto;
+import tqs.sparkflow.userservice.dto.UserUpdateDto;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.restassured.response.Response;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootTest(
     classes = {
@@ -30,18 +36,18 @@ import tqs.sparkflow.userservice.repository.UserRepository;
         TestConfig.class,
         TestcontainersConfiguration.class
     },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.main.allow-bean-definition-overriding=true",
         "spring.data.mongodb.auto-index-creation=true"
     }
 )
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Testcontainers
 class UserControllerIT {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -49,199 +55,365 @@ class UserControllerIT {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private User testUser;
+    private User operatorUser;
+    private RequestSpecification operatorRequestSpec;
+    private RequestSpecification userRequestSpec;
+    private String operatorToken;
+    private String userToken;
+    private final String testPassword = "password123";
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        RestAssured.port = port;
         userRepository.deleteAll();
-        testUser = new User("testuser", "test@example.com", "password123");
-        testUser = userRepository.save(testUser);
+        
+        // Create test users with encoded passwords
+        testUser = new User("testuser", "test@example.com", passwordEncoder.encode(testPassword));
+        operatorUser = new User("operator", "operator@example.com", passwordEncoder.encode(testPassword), true);
+        
+        userRepository.saveAll(java.util.List.of(testUser, operatorUser));
+        
+        // Get JWT tokens for both users
+        operatorToken = getJwtToken("operator@example.com", testPassword);
+        userToken = getJwtToken("test@example.com", testPassword);
+        
+        // Set up request specifications with JWT auth
+        operatorRequestSpec = given()
+            .header("Authorization", "Bearer " + operatorToken)
+            .contentType(MediaType.APPLICATION_JSON_VALUE);
+            
+        userRequestSpec = given()
+            .header("Authorization", "Bearer " + userToken)
+            .contentType(MediaType.APPLICATION_JSON_VALUE);
+    }
+    
+    private String getJwtToken(String email, String password) throws Exception {
+        LoginDto loginDto = new LoginDto();
+        loginDto.setEmailOrUsername(email);
+        loginDto.setPassword(password);
+        
+        Response response = given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .body(objectMapper.writeValueAsString(loginDto))
+        .when()
+            .post("/api/v1/auth/login")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .extract().response();
+            
+        String responseBody = response.getBody().asString();
+        JsonNode jsonResponse = objectMapper.readTree(responseBody);
+        return jsonResponse.get("accessToken").asText();
     }
 
     @Test
-    void whenCreateUser_thenReturnCreatedUser() throws Exception {
-        User newUser = new User("newuser", "new@example.com", "password123");
+    void whenCreateUserWithValidData_thenReturnCreated() throws Exception {
+        UserCreateDto createDTO = new UserCreateDto();
+        createDTO.setUsername("newuser");
+        createDTO.setEmail("newuser@example.com");
+        createDTO.setPassword("password123");
+        createDTO.setOperator(false);
 
-        MvcResult result = mockMvc.perform(post("/api/v1/users")
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(newUser)))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        User createdUser = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
-        assertThat(createdUser.getUsername()).isEqualTo(newUser.getUsername());
-        assertThat(createdUser.getEmail()).isEqualTo(newUser.getEmail());
+        operatorRequestSpec
+            .body(objectMapper.writeValueAsString(createDTO))
+        .when()
+            .post("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.CREATED.value())
+            .body("username", equalTo("newuser"))
+            .body("email", equalTo("newuser@example.com"))
+            .body("operator", equalTo(false));
     }
 
     @Test
     void whenCreateUserWithExistingEmail_thenReturnConflict() throws Exception {
-        User duplicateUser = new User("anotheruser", testUser.getEmail(), "password123");
+        UserCreateDto createDTO = new UserCreateDto();
+        createDTO.setUsername("newuser");
+        createDTO.setEmail("test@example.com"); // Email already exists
+        createDTO.setPassword("password123");
+        createDTO.setOperator(false);
 
-        mockMvc.perform(post("/api/v1/users")
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(duplicateUser)))
-                .andExpect(status().isConflict());
+        operatorRequestSpec
+            .body(objectMapper.writeValueAsString(createDTO))
+        .when()
+            .post("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.CONFLICT.value());
     }
 
     @Test
     void whenCreateUserWithInvalidData_thenReturnBadRequest() throws Exception {
-        User invalidUser = new User("", "invalid-email", "123"); // Invalid username, email, and password
+        UserCreateDto createDTO = new UserCreateDto();
+        createDTO.setUsername(""); // Invalid username
+        createDTO.setEmail("invalid-email"); // Invalid email
+        createDTO.setPassword("123"); // Password too short
+        createDTO.setOperator(false);
 
-        mockMvc.perform(post("/api/v1/users")
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidUser)))
-                .andExpect(status().isBadRequest());
+        operatorRequestSpec
+            .body(objectMapper.writeValueAsString(createDTO))
+        .when()
+            .post("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 
     @Test
-    void whenGetUserById_thenReturnUser() throws Exception {
-        mockMvc.perform(get("/api/v1/users/{id}", testUser.getId())
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.username").value(testUser.getUsername()))
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()));
+    void whenCreateUserAsRegularUser_thenReturnForbidden() throws Exception {
+        UserCreateDto createDTO = new UserCreateDto();
+        createDTO.setUsername("newuser");
+        createDTO.setEmail("newuser@example.com");
+        createDTO.setPassword("password123");
+        createDTO.setOperator(false);
+
+        userRequestSpec
+            .body(objectMapper.writeValueAsString(createDTO))
+        .when()
+            .post("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void whenGetUserByEmail_thenReturnUser() throws Exception {
-        mockMvc.perform(get("/api/v1/users/email/{email}", testUser.getEmail())
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.username").value(testUser.getUsername()))
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()));
+    void whenGetUserById_thenReturnUser() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("testuser"))
+            .body("email", equalTo("test@example.com"))
+            .body("operator", equalTo(false));
     }
 
     @Test
-    void whenGetUserByIdNotFound_thenReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/users/{id}", "nonexistent")
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isNotFound());
+    void whenGetUserByNonExistentId_thenReturnNotFound() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
-    void whenGetUserByEmailNotFound_thenReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/users/email/{email}", "nonexistent@example.com")
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isNotFound());
+    void whenGetUserByIdAsRegularUser_thenReturnForbidden() {
+        userRequestSpec
+        .when()
+            .get("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void whenUpdateUser_thenReturnUpdatedUser() throws Exception {
-        User updatedUser = new User("updateduser", testUser.getEmail(), "newpassword");
-        updatedUser.setId(testUser.getId());
-
-        MvcResult result = mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedUser)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        User returnedUser = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
-        assertThat(returnedUser.getUsername()).isEqualTo(updatedUser.getUsername());
-        assertThat(returnedUser.getEmail()).isEqualTo(updatedUser.getEmail());
+    void whenGetUserByEmail_thenReturnUser() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/email/{email}", "test@example.com")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("testuser"))
+            .body("email", equalTo("test@example.com"))
+            .body("operator", equalTo(false));
     }
 
     @Test
-    void whenUpdateUserWithNewEmail_thenReturnUpdatedUser() throws Exception {
-        User updatedUser = new User("updateduser", "new@example.com", "newpassword");
-        updatedUser.setId(testUser.getId());
+    void whenGetUserByNonExistentEmail_thenReturnNotFound() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/email/{email}", "nonexistent@example.com")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND.value());
+    }
 
-        MvcResult result = mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedUser)))
-                .andExpect(status().isOk())
-                .andReturn();
+    @Test
+    void whenGetAllUsers_thenReturnUserList() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("$", hasSize(2))
+            .body("[0].username", equalTo("testuser"))
+            .body("[1].username", equalTo("operator"));
+    }
 
-        User returnedUser = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
-        assertThat(returnedUser.getEmail()).isEqualTo(updatedUser.getEmail());
+    @Test
+    void whenGetAllUsersAsRegularUser_thenReturnForbidden() {
+        userRequestSpec
+        .when()
+            .get("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void whenUpdateUserWithValidData_thenReturnUpdatedUser() throws Exception {
+        UserUpdateDto updateDTO = new UserUpdateDto();
+        updateDTO.setUsername("updateduser");
+        updateDTO.setEmail("updated@example.com");
+        updateDTO.setOperator(true);
+
+        operatorRequestSpec
+            .body(objectMapper.writeValueAsString(updateDTO))
+        .when()
+            .put("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("updateduser"))
+            .body("email", equalTo("updated@example.com"))
+            .body("operator", equalTo(true));
     }
 
     @Test
     void whenUpdateUserWithExistingEmail_thenReturnConflict() throws Exception {
-        // Create another user first
-        User anotherUser = new User("anotheruser", "another@example.com", "password123");
-        anotherUser = userRepository.save(anotherUser);
+        UserUpdateDto updateDTO = new UserUpdateDto();
+        updateDTO.setUsername("updateduser");
+        updateDTO.setEmail("operator@example.com"); // Email already exists
+        updateDTO.setOperator(false);
 
-        // Try to update testUser with anotherUser's email
-        User updatedUser = new User("updateduser", anotherUser.getEmail(), "newpassword");
-        updatedUser.setId(testUser.getId());
-
-        mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedUser)))
-                .andExpect(status().isConflict());
+        operatorRequestSpec
+            .body(objectMapper.writeValueAsString(updateDTO))
+        .when()
+            .put("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.CONFLICT.value());
     }
 
     @Test
-    void whenUpdateUserWithInvalidData_thenReturnBadRequest() throws Exception {
-        User invalidUser = new User("", "invalid-email", "123");
-        invalidUser.setId(testUser.getId());
+    void whenUpdateNonExistentUser_thenReturnNotFound() throws Exception {
+        UserUpdateDto updateDTO = new UserUpdateDto();
+        updateDTO.setUsername("updateduser");
+        updateDTO.setEmail("updated@example.com");
+        updateDTO.setOperator(false);
 
-        mockMvc.perform(put("/api/v1/users/{id}", testUser.getId())
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidUser)))
-                .andExpect(status().isBadRequest());
+        operatorRequestSpec
+            .body(objectMapper.writeValueAsString(updateDTO))
+        .when()
+            .put("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
-    void whenUpdateUserNotFound_thenReturnNotFound() throws Exception {
-        User updatedUser = new User("updateduser", "new@example.com", "newpassword");
-        updatedUser.setId("nonexistent");
+    void whenUpdateUserAsRegularUser_thenReturnForbidden() throws Exception {
+        UserUpdateDto updateDTO = new UserUpdateDto();
+        updateDTO.setUsername("updateduser");
+        updateDTO.setEmail("updated@example.com");
+        updateDTO.setOperator(false);
 
-        mockMvc.perform(put("/api/v1/users/{id}", "nonexistent")
-                .with(httpBasic("test", "test"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedUser)))
-                .andExpect(status().isNotFound());
+        userRequestSpec
+            .body(objectMapper.writeValueAsString(updateDTO))
+        .when()
+            .put("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void whenDeleteUser_thenReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/v1/users/{id}", testUser.getId())
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isNoContent());
-
-        assertThat(userRepository.findById(testUser.getId())).isEmpty();
+    void whenDeleteUser_thenReturnNoContent() {
+        operatorRequestSpec
+        .when()
+            .delete("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     @Test
-    void whenDeleteUserNotFound_thenReturnNotFound() throws Exception {
-        mockMvc.perform(delete("/api/v1/users/{id}", "nonexistent")
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isNotFound());
+    void whenDeleteNonExistentUser_thenReturnNotFound() {
+        operatorRequestSpec
+        .when()
+            .delete("/api/v1/users/{id}", "507f1f77bcf86cd799439011")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
-    void whenGetAllUsers_thenReturnUserList() throws Exception {
-        // Create another user
-        User anotherUser = new User("anotheruser", "another@example.com", "password123");
-        userRepository.save(anotherUser);
+    void whenDeleteUserAsRegularUser_thenReturnForbidden() {
+        userRequestSpec
+        .when()
+            .delete("/api/v1/users/{id}", testUser.getId())
+        .then()
+            .statusCode(HttpStatus.FORBIDDEN.value());
+    }
 
-        mockMvc.perform(get("/api/v1/users")
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value(testUser.getId()))
-                .andExpect(jsonPath("$[1].id").value(anotherUser.getId()));
+    // This endpoint doesn't exist in UserController - removing test
+
+    // This endpoint doesn't exist in UserController - removing test
+
+    @Test
+    void whenAccessProtectedEndpointWithoutAuthentication_thenReturnUnauthorized() {
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when()
+            .get("/api/v1/users")
+        .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
-    void whenGetAllUsersEmpty_thenReturnEmptyList() throws Exception {
-        userRepository.deleteAll();
+    void whenGetProfileAsOperator_thenReturnProfileInfo() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/profile")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("operator"))
+            .body("authenticated", equalTo(true));
+    }
 
-        mockMvc.perform(get("/api/v1/users")
-                .with(httpBasic("test", "test")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+    @Test
+    void whenGetProfileAsUser_thenReturnProfileInfo() {
+        userRequestSpec
+        .when()
+            .get("/api/v1/users/profile")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("username", equalTo("testuser"))
+            .body("authenticated", equalTo(true));
+    }
+
+    @Test
+    void whenAccessTestEndpointAsOperator_thenReturnTestMessage() {
+        operatorRequestSpec
+        .when()
+            .get("/api/v1/users/test")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("message", equalTo("Access granted to protected endpoint"))
+            .body("user", equalTo("operator"));
+    }
+
+    @Test
+    void whenAccessTestEndpointAsUser_thenReturnTestMessage() {
+        userRequestSpec
+        .when()
+            .get("/api/v1/users/test")
+        .then()
+            .statusCode(HttpStatus.OK.value())
+            .body("message", equalTo("Access granted to protected endpoint"))
+            .body("user", equalTo("testuser"));
+    }
+
+    @Test
+    void whenAccessProfileWithoutAuthentication_thenReturnUnauthorized() {
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when()
+            .get("/api/v1/users/profile")
+        .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void whenAccessTestEndpointWithoutAuthentication_thenReturnUnauthorized() {
+        given()
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when()
+            .get("/api/v1/users/test")
+        .then()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 } 

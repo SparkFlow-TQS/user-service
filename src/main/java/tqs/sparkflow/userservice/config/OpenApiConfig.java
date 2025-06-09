@@ -1,7 +1,10 @@
 package tqs.sparkflow.userservice.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class OpenApiConfig {
+
+  private static final String BEARER_AUTH = "bearerAuth";
 
   /**
    * Creates and configures the OpenAPI documentation for the User Service.
@@ -23,7 +28,16 @@ public class OpenApiConfig {
       .info(new Info()
         .title("User Service API")
         .version("0.0.1")
-        .description("API for managing users")
+        .description("API for managing users with JWT authentication")
+      )
+      .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
+      .components(new Components()
+        .addSecuritySchemes(BEARER_AUTH, new SecurityScheme()
+          .name(BEARER_AUTH)
+          .type(SecurityScheme.Type.HTTP)
+          .scheme("bearer")
+          .bearerFormat("JWT")
+        )
       );
   }
 } 
