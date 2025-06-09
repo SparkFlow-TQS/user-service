@@ -19,8 +19,6 @@ import tqs.sparkflow.userservice.dto.LoginDto;
 import tqs.sparkflow.userservice.dto.RefreshTokenRequestDto;
 import tqs.sparkflow.userservice.dto.RegisterDto;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
-import tqs.sparkflow.userservice.exception.DuplicateEmailException;
-import tqs.sparkflow.userservice.exception.DuplicateUsernameException;
 import tqs.sparkflow.userservice.exception.ValidationException;
 import tqs.sparkflow.userservice.model.User;
 import tqs.sparkflow.userservice.service.AuthService;
