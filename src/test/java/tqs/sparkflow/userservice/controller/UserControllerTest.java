@@ -95,7 +95,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnCreatedWhenValidUserDto() {
+    void shouldReturnCreatedWhenValidUserDto() throws Exception {
         when(userService.createUser(any(UserCreateDto.class))).thenReturn(testUser);
 
         mockMvc.perform(post("/users")
@@ -111,7 +111,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnConflictWhenDuplicateEmailException() {
+    void shouldReturnConflictWhenDuplicateEmailException() throws Exception {
         when(userService.createUser(any(UserCreateDto.class)))
                 .thenThrow(new DuplicateEmailException("Email already exists: new@example.com"));
 
@@ -124,7 +124,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnBadRequestWhenValidationFails() {
+    void shouldReturnBadRequestWhenValidationFails() throws Exception {
         createDto.setUsername(""); // Invalid username
         createDto.setEmail("invalid-email"); // Invalid email format
 
@@ -135,7 +135,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnUserWhenValidId() {
+    void shouldReturnUserWhenValidId() throws Exception {
         when(userService.getUserById("1")).thenReturn(testUser);
 
         mockMvc.perform(get("/users/1"))
@@ -148,7 +148,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUserNotExists() {
+    void shouldReturnNotFoundWhenUserNotExists() throws Exception {
         when(userService.getUserById("nonexistent"))
                 .thenThrow(new ResourceNotFoundException("User not found with id: nonexistent"));
 
@@ -159,7 +159,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnUserWhenValidEmail() {
+    void shouldReturnUserWhenValidEmail() throws Exception {
         when(userService.getUserByEmail("test@example.com")).thenReturn(testUser);
 
         mockMvc.perform(get("/users/email/test@example.com"))
@@ -172,7 +172,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenEmailNotExists() {
+    void shouldReturnNotFoundWhenEmailNotExists() throws Exception {
         when(userService.getUserByEmail("nonexistent@example.com"))
                 .thenThrow(new ResourceNotFoundException("User not found with email: nonexistent@example.com"));
 
@@ -183,7 +183,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnUpdatedUserWhenValidData() {
+    void shouldReturnUpdatedUserWhenValidData() throws Exception {
         User updatedUser = new User();
         updatedUser.setId("1");
         updatedUser.setUsername("updateduser");
@@ -205,7 +205,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUpdateUserNotExists() {
+    void shouldReturnNotFoundWhenUpdateUserNotExists() throws Exception {
         when(userService.updateUser(eq("nonexistent"), any(UserUpdateDto.class)))
                 .thenThrow(new ResourceNotFoundException("User not found with id: nonexistent"));
 
@@ -218,7 +218,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnConflictWhenUpdateDuplicateEmail() {
+    void shouldReturnConflictWhenUpdateDuplicateEmail() throws Exception {
         when(userService.updateUser(eq("1"), any(UserUpdateDto.class)))
                 .thenThrow(new DuplicateEmailException("Email already exists: updated@example.com"));
 
@@ -231,7 +231,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnNoContentWhenValidDelete() {
+    void shouldReturnNoContentWhenValidDelete() throws Exception {
         doNothing().when(userService).deleteUser("1");
 
         mockMvc.perform(delete("/users/1"))
@@ -241,7 +241,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenDeleteUserNotExists() {
+    void shouldReturnNotFoundWhenDeleteUserNotExists() throws Exception {
         doThrow(new ResourceNotFoundException("User not found with id: nonexistent"))
                 .when(userService).deleteUser("nonexistent");
 
@@ -252,7 +252,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnUserListWhenGetAllUsers() {
+    void shouldReturnUserListWhenGetAllUsers() throws Exception {
         List<User> users = List.of(testUser);
         when(userService.getAllUsers()).thenReturn(users);
 
@@ -268,7 +268,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "testuser", authorities = {"ROLE_USER"})
-    void shouldReturnProfileWhenAuthenticated() {
+    void shouldReturnProfileWhenAuthenticated() throws Exception {
         mockMvc.perform(get("/users/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("testuser"))
@@ -277,7 +277,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "testuser", authorities = {"ROLE_OPERATOR"})
-    void shouldReturnTestMessageWhenAuthenticated() {
+    void shouldReturnTestMessageWhenAuthenticated() throws Exception {
         mockMvc.perform(get("/users/test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").exists())
@@ -285,7 +285,7 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenNotAuthenticated() {
+    void shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/users/profile"))
                 .andExpect(status().isUnauthorized());
     }
