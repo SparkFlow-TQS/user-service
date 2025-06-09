@@ -35,19 +35,13 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
     
-    - name: Build with Maven
+    - name: Run tests and integration tests
       run: ./mvnw clean verify
       env:
         SPRING_PROFILES_ACTIVE: test
         TESTCONTAINERS_REUSE_ENABLE: false
     
-    - name: Run Integration Tests
-      run: ./mvnw verify -Dtest=*IT
-      env:
-        SPRING_PROFILES_ACTIVE: test
-        TESTCONTAINERS_REUSE_ENABLE: false
-    
-    - name: Run Cucumber Tests
+    - name: Run Cucumber tests
       run: ./mvnw verify -Dtest=CucumberTestRunner
       env:
         SPRING_PROFILES_ACTIVE: test

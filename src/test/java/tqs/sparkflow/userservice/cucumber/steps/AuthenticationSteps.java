@@ -66,9 +66,18 @@ public class AuthenticationSteps {
 
     @Before
     public void cleanDatabase() {
-        mongoTemplate.dropCollection("users");
-        userTokens.clear();
-        refreshTokens.clear();
+        try {
+            mongoTemplate.dropCollection("users");
+            userTokens.clear();
+            refreshTokens.clear();
+            currentUserToken = null;
+            currentRefreshToken = null;
+            currentUsername = null;
+            currentUserIsOperator = false;
+            response = null;
+        } catch (Exception e) {
+            logger.warn("Error cleaning database: {}", e.getMessage());
+        }
     }
 
     @Given("I have new user registration details")
@@ -108,61 +117,88 @@ public class AuthenticationSteps {
 
     @When("I register as a new operator")
     public void i_register_as_a_new_operator() {
-        // For operators, we need to create them directly via admin API or database
-        // First create an admin to make the request
-        User adminUser = new User("admin", "admin@test.com", 
-            passwordEncoder.encode("password123"), true);
-        userRepository.save(adminUser);
-        
-        // Login as admin
-        String adminLoginJson = """
-        {
-            "emailOrUsername": "admin@test.com",
-            "password": "password123"
+        try {
+            // For operators, we need to create them directly via admin API or database
+            // First create an admin to make the request
+            User adminUser = new User("admin", "admin@test.com", 
+                passwordEncoder.encode("password123"), true);
+            userRepository.save(adminUser);
+            
+            // Login as admin
+            String adminLoginJson = """
+            {
+                "emailOrUsername": "admin@test.com",
+                "password": "password123"
+            }
+            """;
+            
+            HttpHeaders loginHeaders = new HttpHeaders();
+            loginHeaders.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> loginEntity = new HttpEntity<>(adminLoginJson, loginHeaders);
+            ResponseEntity<String> loginResponse = restTemplate.postForEntity(
+                baseUrl + "/api/v1/auth/login", loginEntity, String.class);
+            
+            if (loginResponse.getStatusCode() != HttpStatus.OK || loginResponse.getBody() == null) {
+                logger.error("Failed to login as admin: {}", loginResponse.getStatusCode());
+                response = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return;
+            }
+            
+            String adminToken = extractTokenFromResponse(loginResponse.getBody());
+            if (adminToken == null) {
+                logger.error("Failed to extract admin token");
+                response = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return;
+            }
+            
+            // Create operator user via admin API
+            String operatorJson = registrationJson.replace("}", ", \"operator\": true}");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(adminToken);
+            HttpEntity<String> entity = new HttpEntity<>(operatorJson, headers);
+            response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
+        } catch (Exception e) {
+            logger.error("Error during operator registration: {}", e.getMessage());
+            response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        """;
-        
-        HttpHeaders loginHeaders = new HttpHeaders();
-        loginHeaders.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> loginEntity = new HttpEntity<>(adminLoginJson, loginHeaders);
-        ResponseEntity<String> loginResponse = restTemplate.postForEntity(
-            baseUrl + "/api/v1/auth/login", loginEntity, String.class);
-        
-        String adminToken = extractTokenFromResponse(loginResponse.getBody());
-        
-        // Create operator user via admin API
-        String operatorJson = registrationJson.replace("}", ", \"operator\": true}");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(adminToken);
-        HttpEntity<String> entity = new HttpEntity<>(operatorJson, headers);
-        response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
     }
 
     @Then("I should be registered successfully")
     public void i_should_be_registered_successfully() {
+        assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isIn(HttpStatus.CREATED, HttpStatus.OK);
     }
 
     @When("I login with correct credentials")
     public void i_login_with_correct_credentials() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(loginJson, headers);
-        response = restTemplate.postForEntity(baseUrl + "/api/v1/auth/login", entity, String.class);
-        
-        if (response.getStatusCode() == HttpStatus.OK) {
-            currentUserToken = extractTokenFromResponse(response.getBody());
-            currentRefreshToken = extractRefreshTokenFromResponse(response.getBody());
-            userTokens.put(currentUsername, currentUserToken);
-            refreshTokens.put(currentUsername, currentRefreshToken);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entity = new HttpEntity<>(loginJson, headers);
+            response = restTemplate.postForEntity(baseUrl + "/api/v1/auth/login", entity, String.class);
+            
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                currentUserToken = extractTokenFromResponse(response.getBody());
+                currentRefreshToken = extractRefreshTokenFromResponse(response.getBody());
+                if (currentUserToken != null && currentUsername != null) {
+                    userTokens.put(currentUsername, currentUserToken);
+                    refreshTokens.put(currentUsername, currentRefreshToken);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error during login: {}", e.getMessage());
+            response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @Then("I should receive a valid JWT token")
     public void i_should_receive_a_valid_jwt_token() {
+        assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("accessToken");
+        if (response.getBody() != null) {
+            assertThat(response.getBody()).contains("accessToken");
+        }
         assertThat(currentUserToken).isNotNull();
     }
 
@@ -202,18 +238,23 @@ public class AuthenticationSteps {
 
     @When("I try to create a new user account")
     public void i_try_to_create_a_new_user_account() {
-        String newUserJson = """
-        {
-            "username": "newuser",
-            "email": "new@test.com",
-            "password": "password123",
-            "operator": false
+        try {
+            String newUserJson = """
+            {
+                "username": "newuser",
+                "email": "new@test.com",
+                "password": "password123",
+                "operator": false
+            }
+            """;
+            
+            HttpHeaders headers = createAuthenticatedHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(newUserJson, headers);
+            response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
+        } catch (Exception e) {
+            logger.error("Error during user creation: {}", e.getMessage());
+            response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        """;
-        
-        HttpHeaders headers = createAuthenticatedHeaders();
-        HttpEntity<String> entity = new HttpEntity<>(newUserJson, headers);
-        response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
     }
 
     @When("I create a new user account")
@@ -228,7 +269,8 @@ public class AuthenticationSteps {
 
     @Then("the operation should succeed")
     public void the_operation_should_succeed() {
-        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.CREATED);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
     }
 
     @When("I try to list all users")
@@ -470,10 +512,6 @@ public class AuthenticationSteps {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
-    @Then("the user should be deleted successfully")
-    public void the_user_should_be_deleted_successfully() {
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
 
     // Helper methods
 

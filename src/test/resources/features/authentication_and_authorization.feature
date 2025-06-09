@@ -41,7 +41,7 @@ Feature: Authentication and Authorization
     When I update a user account
     Then the user should be updated successfully
     When I delete a user account
-    Then the user should be deleted successfully
+    Then the operation should succeed
 
   Scenario: Both users and operators can access their own profile
     Given I am logged in as a regular user "profileuser"

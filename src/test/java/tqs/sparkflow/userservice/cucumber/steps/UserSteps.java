@@ -55,7 +55,15 @@ public class UserSteps {
 
     @Before
     public void cleanDatabase() {
-        mongoTemplate.dropCollection("users");
+        try {
+            mongoTemplate.dropCollection("users");
+            response = null;
+            userJson = null;
+            lastCreatedUsername = null;
+            jwtToken = null;
+        } catch (Exception e) {
+            logger.warn("Error cleaning database: {}", e.getMessage());
+        }
     }
 
     @Given("I have user data")
@@ -166,6 +174,15 @@ public class UserSteps {
         
         // Store the response in the class field
         this.response = deleteResponse;
+    }
+
+    @Then("the user should be deleted successfully")
+    public void the_user_should_be_deleted_successfully() {
+        logger.info("Asserting delete response: {}", response);
+        assertThat(response)
+            .withFailMessage("Response is null! Did you forget to call a step that sets it?")
+            .isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
 
