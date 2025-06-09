@@ -6,6 +6,10 @@ import jakarta.validation.ValidatorFactory;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,57 +48,42 @@ class UserTest {
         assertThat(emptyUser.isOperator()).isFalse();
     }
 
-    @Test
-    void whenUsernameIsBlank_thenValidationFails() {
-        user.setUsername("");
-        var violations = validator.validate(user);
-        assertThat(violations)
-            .isNotEmpty()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+    private static Stream<Arguments> invalidUserFieldTestCases() {
+        return Stream.of(
+            Arguments.of("username", "", "blank username"),
+            Arguments.of("username", "ab", "username too short"),
+            Arguments.of("username", "a".repeat(51), "username too long"),
+            Arguments.of("email", "", "blank email"),
+            Arguments.of("password", "12345", "password too short"),
+            Arguments.of("password", "", "blank password")
+        );
     }
 
-    @Test
-    void whenUsernameIsTooShort_thenValidationFails() {
-        user.setUsername("ab");
+    @ParameterizedTest
+    @MethodSource("invalidUserFieldTestCases")
+    void whenUserFieldIsInvalid_thenValidationFails(String fieldName, String fieldValue, String description) {
+        // Given
+        switch (fieldName) {
+            case "username":
+                user.setUsername(fieldValue);
+                break;
+            case "email":
+                user.setEmail(fieldValue);
+                break;
+            case "password":
+                user.setPassword(fieldValue);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown field: " + fieldName);
+        }
+
+        // When
         var violations = validator.validate(user);
+
+        // Then
         assertThat(violations)
             .isNotEmpty()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("username"));
+            .anyMatch(v -> v.getPropertyPath().toString().equals(fieldName));
     }
 
-    @Test
-    void whenUsernameIsTooLong_thenValidationFails() {
-        user.setUsername("a".repeat(51));
-        var violations = validator.validate(user);
-        assertThat(violations)
-            .isNotEmpty()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("username"));
-    }
-
-    @Test
-    void whenEmailIsBlank_thenValidationFails() {
-        user.setEmail("");
-        var violations = validator.validate(user);
-        assertThat(violations)
-            .isNotEmpty()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("email"));
-    }
-
-    @Test
-    void whenPasswordIsTooShort_thenValidationFails() {
-        user.setPassword("12345");
-        var violations = validator.validate(user);
-        assertThat(violations)
-            .isNotEmpty()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
-    }
-
-    @Test
-    void whenPasswordIsBlank_thenValidationFails() {
-        user.setPassword("");
-        var violations = validator.validate(user);
-        assertThat(violations)
-            .isNotEmpty()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("password"));
-    }
 } 
