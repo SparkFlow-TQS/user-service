@@ -91,4 +91,15 @@ public class GlobalExceptionHandler {
     error.put("message", ex.getMessage());
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
   }
+
+  /**
+   * Handles resource not found exceptions.
+   */
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<Object> handleResourceNotFoundException(
+      ResourceNotFoundException ex, WebRequest request) {
+    Map<String, String> error = new HashMap<>();
+    error.put("message", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+  }
 }
