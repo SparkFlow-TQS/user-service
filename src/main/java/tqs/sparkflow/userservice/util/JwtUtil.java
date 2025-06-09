@@ -22,7 +22,6 @@ public class JwtUtil {
   private static final String EMAIL_CLAIM = "email";
   private static final String OPERATOR_CLAIM = "isOperator";
   private static final String TYPE_CLAIM = "type";
-  private static final int MIN_SECRET_LENGTH = 32;
 
   @Value("${jwt.secret}")
   private String secret;

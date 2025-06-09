@@ -108,7 +108,7 @@ public class AuthService {
    */
   public JwtResponseDto refreshToken(RefreshTokenRequestDto refreshTokenRequestDto) {
     String refreshToken = refreshTokenRequestDto.getRefreshToken();
-    if (!jwtUtil.isRefreshToken(refreshToken)) {
+    if (!Boolean.TRUE.equals(jwtUtil.isRefreshToken(refreshToken))) {
       throw new AuthenticationException(INVALID_REFRESH_TOKEN);
     }
 
