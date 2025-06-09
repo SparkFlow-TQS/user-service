@@ -1,17 +1,20 @@
 package tqs.sparkflow.userservice.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,6 +23,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import jakarta.servlet.ServletException;
 import tqs.sparkflow.userservice.util.JwtUtil;
@@ -31,7 +35,7 @@ class JwtAuthenticationFilterTest {
     private JwtUtil jwtUtil;
 
     @Mock
-    private CustomUserDetailsService userDetailsService;
+    private UserDetailsService userDetailsService;
 
     @Mock
     private UserDetails userDetails;
@@ -92,39 +96,39 @@ class JwtAuthenticationFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(username);
     }
 
-    @Test
-    void whenInvalidJwtToken_thenDoNotSetAuthentication() throws ServletException, IOException {
-        String token = "invalid.jwt.token";
+    private static Stream<Arguments> invalidTokenProvider() {
+        return Stream.of(
+            Arguments.of("invalid.jwt.token", false, "Token validation returns false"),
+            Arguments.of("malformed.jwt.token", true, "Token extraction throws exception")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidTokenProvider")
+    void whenInvalidJwtToken_thenDoNotSetAuthentication(String token, boolean throwsException, String description) throws ServletException, IOException {
         String username = "testuser";
         
         request.addHeader("Authorization", "Bearer " + token);
         
-        when(jwtUtil.extractUsername(token)).thenReturn(username);
-        when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
-        when(jwtUtil.validateToken(token, username)).thenReturn(false);
-        when(userDetails.getUsername()).thenReturn(username);
+        if (throwsException) {
+            when(jwtUtil.extractUsername(token)).thenThrow(new RuntimeException("Invalid token"));
+        } else {
+            when(jwtUtil.extractUsername(token)).thenReturn(username);
+            when(userDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+            when(jwtUtil.validateToken(token, username)).thenReturn(false);
+            when(userDetails.getUsername()).thenReturn(username);
+        }
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
         verify(jwtUtil).extractUsername(token);
-        verify(userDetailsService).loadUserByUsername(username);
-        verify(jwtUtil).validateToken(token, username);
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-    }
-
-    @Test
-    void whenJwtTokenThrowsException_thenDoNotSetAuthentication() throws ServletException, IOException {
-        String token = "malformed.jwt.token";
-        
-        request.addHeader("Authorization", "Bearer " + token);
-        
-        when(jwtUtil.extractUsername(token)).thenThrow(new RuntimeException("Invalid token"));
-
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        verify(jwtUtil).extractUsername(token);
-        verify(userDetailsService, never()).loadUserByUsername(anyString());
-        verify(jwtUtil, never()).validateToken(anyString(), anyString());
+        if (!throwsException) {
+            verify(userDetailsService).loadUserByUsername(username);
+            verify(jwtUtil).validateToken(token, username);
+        } else {
+            verify(userDetailsService, never()).loadUserByUsername(anyString());
+            verify(jwtUtil, never()).validateToken(anyString(), anyString());
+        }
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 

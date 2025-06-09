@@ -5,9 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -88,37 +92,18 @@ class CustomUserDetailsServiceTest {
         assertThat(userDetails.isEnabled()).isTrue();
     }
 
-    @Test
-    void whenUserDoesNotExist_thenThrowUsernameNotFoundException() {
-        // Given
-        String username = "nonexistentuser";
-        
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> customUserDetailsService.loadUserByUsername(username))
-            .isInstanceOf(UsernameNotFoundException.class)
-            .hasMessage("User not found: " + username);
+    private static Stream<Arguments> invalidUsernameProvider() {
+        return Stream.of(
+            Arguments.of("nonexistentuser"),
+            Arguments.of((String) null),
+            Arguments.of("")
+        );
     }
 
-    @Test
-    void whenUsernameIsNull_thenThrowUsernameNotFoundException() {
+    @ParameterizedTest
+    @MethodSource("invalidUsernameProvider")
+    void whenInvalidUsername_thenThrowUsernameNotFoundException(String username) {
         // Given
-        String username = null;
-        
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> customUserDetailsService.loadUserByUsername(username))
-            .isInstanceOf(UsernameNotFoundException.class)
-            .hasMessage("User not found: " + username);
-    }
-
-    @Test
-    void whenUsernameIsEmpty_thenThrowUsernameNotFoundException() {
-        // Given
-        String username = "";
-        
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
         // When & Then

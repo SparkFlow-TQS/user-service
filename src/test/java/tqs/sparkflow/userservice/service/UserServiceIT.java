@@ -173,9 +173,9 @@ class UserServiceIT {
         updateUserDTO.setEmail("another@example.com"); // Try to use existing email
         updateUserDTO.setPassword("password123");
 
-        assertThatThrownBy(() -> {
-            userService.updateUser(testUser.getId(), updateUserDTO);
-        }).isInstanceOf(DuplicateEmailException.class);
+        String userId = testUser.getId();
+        assertThatThrownBy(() -> userService.updateUser(userId, updateUserDTO))
+                .isInstanceOf(DuplicateEmailException.class);
     }
 
     @Test
@@ -187,9 +187,9 @@ class UserServiceIT {
         UserUpdateDto updateUserDTO = new UserUpdateDto();
         updateUserDTO.setUsername("anotheruser"); // Try to use existing username
 
-        assertThatThrownBy(() -> {
-            userService.updateUser(testUser.getId(), updateUserDTO);
-        }).isInstanceOf(DuplicateUsernameException.class);
+        String userId = testUser.getId();
+        assertThatThrownBy(() -> userService.updateUser(userId, updateUserDTO))
+                .isInstanceOf(DuplicateUsernameException.class);
     }
 
     @Test
