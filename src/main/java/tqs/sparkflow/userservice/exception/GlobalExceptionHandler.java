@@ -18,6 +18,8 @@ import org.springframework.web.context.request.WebRequest;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+  private static final String MESSAGE_KEY = "message";
+
   /**
    * Handles validation errors for request body validation.
    */
@@ -55,7 +57,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleValidationException(
       ValidationException ex, WebRequest request) {
     Map<String, String> error = new HashMap<>();
-    error.put("message", ex.getMessage());
+    error.put(MESSAGE_KEY, ex.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
@@ -66,7 +68,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleAuthenticationException(
       AuthenticationException ex, WebRequest request) {
     Map<String, String> error = new HashMap<>();
-    error.put("message", ex.getMessage());
+    error.put(MESSAGE_KEY, ex.getMessage());
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
   }
 
@@ -77,7 +79,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleDuplicateEmailException(
       DuplicateEmailException ex, WebRequest request) {
     Map<String, String> error = new HashMap<>();
-    error.put("message", ex.getMessage());
+    error.put(MESSAGE_KEY, ex.getMessage());
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
   }
 
@@ -88,7 +90,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleDuplicateUsernameException(
       DuplicateUsernameException ex, WebRequest request) {
     Map<String, String> error = new HashMap<>();
-    error.put("message", ex.getMessage());
+    error.put(MESSAGE_KEY, ex.getMessage());
     return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
   }
 
@@ -99,7 +101,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleResourceNotFoundException(
       ResourceNotFoundException ex, WebRequest request) {
     Map<String, String> error = new HashMap<>();
-    error.put("message", ex.getMessage());
+    error.put(MESSAGE_KEY, ex.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
 }
