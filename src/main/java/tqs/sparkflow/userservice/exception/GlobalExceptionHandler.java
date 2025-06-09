@@ -1,10 +1,9 @@
 package tqs.sparkflow.userservice.exception;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -23,7 +22,7 @@ public class GlobalExceptionHandler {
    * Handles validation errors for request body validation.
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Object> handleValidationException(
+  public ResponseEntity<Object> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException ex, WebRequest request) {
     Map<String, String> errors = new HashMap<>();
     ex.getBindingResult().getAllErrors().forEach(error -> {

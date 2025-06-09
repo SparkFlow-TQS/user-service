@@ -68,8 +68,7 @@ public class UserSteps {
             lastCreatedUsername = null;
             jwtToken = null;
             
-            // Small delay to ensure cleanup is complete
-            Thread.sleep(100);
+            // Cleanup complete - no delay needed for MongoDB operations
         } catch (Exception e) {
             logger.warn("Error cleaning database: {}", e.getMessage());
         }

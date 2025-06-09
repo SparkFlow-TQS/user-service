@@ -143,7 +143,7 @@ class GlobalExceptionHandlerTest {
 
         // When
         ResponseEntity<Object> response = globalExceptionHandler
-            .handleValidationException(exception, webRequest);
+            .handleMethodArgumentNotValidException(exception, webRequest);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);

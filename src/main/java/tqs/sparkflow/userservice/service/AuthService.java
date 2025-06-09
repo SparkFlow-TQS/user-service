@@ -23,6 +23,9 @@ public class AuthService {
 
   private static final String INVALID_CREDENTIALS = "Invalid credentials";
   private static final String EMAIL_EXISTS = "Email already exists: %s";
+  private static final int MIN_USERNAME_LENGTH = 3;
+  private static final int MAX_USERNAME_LENGTH = 50;
+  private static final int MIN_PASSWORD_LENGTH = 8;
   private static final String USERNAME_EXISTS = "Username already exists: %s";
   private static final String INVALID_EMAIL = "Invalid email format";
   private static final String INVALID_USERNAME = "Username must be between 3 and 50 characters";
@@ -163,10 +166,10 @@ public class AuthService {
   }
 
   private boolean isValidUsername(String username) {
-    return username.length() >= 3 && username.length() <= 50;
+    return username.length() >= MIN_USERNAME_LENGTH && username.length() <= MAX_USERNAME_LENGTH;
   }
 
   private boolean isValidPassword(String password) {
-    return password.length() >= 8;
+    return password.length() >= MIN_PASSWORD_LENGTH;
   }
 } 

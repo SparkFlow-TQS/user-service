@@ -110,17 +110,10 @@ class JwtUtilTest {
 
     @Test
     void whenValidateTokenWithExpiredToken_thenReturnFalse() {
-        // Set very short expiration time
-        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", 1L); // 1 millisecond
+        // Set very short expiration time (1 millisecond in the past)
+        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", -1L);
         
         String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
-        
-        // Wait for token to expire
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
         
         // The validateToken method should handle expired tokens gracefully
         Boolean isValid = jwtUtil.validateToken(token, testUser.getUsername());
@@ -165,17 +158,10 @@ class JwtUtilTest {
 
     @Test
     void whenExtractUsernameFromExpiredToken_thenThrowException() {
-        // Set very short expiration time
-        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", 1L);
+        // Set negative expiration time to ensure immediate expiry
+        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", -1000L);
         
         String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
-        
-        // Wait for token to expire
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
         
         assertThatThrownBy(() -> jwtUtil.extractUsername(token))
             .isInstanceOf(ExpiredJwtException.class);
@@ -267,17 +253,10 @@ class JwtUtilTest {
 
     @Test
     void whenValidateTokenWithExceptionsWithExpiredToken_thenThrowException() {
-        // Set very short expiration time
-        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", 1L);
+        // Set negative expiration time to ensure immediate expiry
+        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", -1000L);
         
         String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
-        
-        // Wait for token to expire
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
         
         assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(token, testUser.getUsername()))
             .isInstanceOf(ExpiredJwtException.class);

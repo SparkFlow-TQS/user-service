@@ -19,6 +19,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtUtil {
 
+  private static final String REFRESH_TYPE = "refresh";
+  private static final String EMAIL_CLAIM = "email";
+  private static final String OPERATOR_CLAIM = "isOperator";
+  private static final String TYPE_CLAIM = "type";
+  private static final int MIN_SECRET_LENGTH = 32;
+
   @Value("${jwt.secret}")
   private String secret;
 
@@ -95,8 +101,8 @@ public class JwtUtil {
    */
   public String generateToken(String username, String email, Boolean isOperator) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("email", email);
-    claims.put("isOperator", isOperator);
+    claims.put(EMAIL_CLAIM, email);
+    claims.put(OPERATOR_CLAIM, isOperator);
     return createToken(claims, username, jwtExpiration);
   }
 
@@ -108,7 +114,7 @@ public class JwtUtil {
    */
   public String generateRefreshToken(String username) {
     Map<String, Object> claims = new HashMap<>();
-    claims.put("tokenType", "refresh");
+    claims.put(TYPE_CLAIM, REFRESH_TYPE);
     return createToken(claims, username, refreshExpiration);
   }
 
@@ -171,7 +177,7 @@ public class JwtUtil {
   public Boolean isRefreshToken(String token) {
     try {
       Claims claims = extractAllClaims(token);
-      return "refresh".equals(claims.get("tokenType"));
+      return REFRESH_TYPE.equals(claims.get(TYPE_CLAIM));
     } catch (Exception e) {
       return false;
     }
@@ -184,7 +190,7 @@ public class JwtUtil {
    * @return the email
    */
   public String extractEmail(String token) {
-    return extractClaim(token, claims -> claims.get("email", String.class));
+    return extractClaim(token, claims -> claims.get(EMAIL_CLAIM, String.class));
   }
 
   /**
@@ -194,7 +200,7 @@ public class JwtUtil {
    * @return the operator status
    */
   public Boolean extractIsOperator(String token) {
-    return extractClaim(token, claims -> claims.get("isOperator", Boolean.class));
+    return extractClaim(token, claims -> claims.get(OPERATOR_CLAIM, Boolean.class));
   }
 
   /**

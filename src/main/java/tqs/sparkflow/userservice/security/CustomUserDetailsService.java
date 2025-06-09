@@ -17,8 +17,16 @@ import tqs.sparkflow.userservice.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-  @Autowired
-  private UserRepository userRepository;
+  private final UserRepository userRepository;
+  
+  /**
+   * Constructor for CustomUserDetailsService.
+   * 
+   * @param userRepository the user repository
+   */
+  public CustomUserDetailsService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
   /**
    * Loads user details by username for authentication.

@@ -82,8 +82,7 @@ public class AuthenticationSteps {
             currentUserIsOperator = false;
             response = null;
             
-            // Small delay to ensure cleanup is complete
-            Thread.sleep(100);
+            // Cleanup complete - no delay needed for MongoDB operations
         } catch (Exception e) {
             logger.warn("Error cleaning database: {}", e.getMessage());
         }
@@ -213,12 +212,7 @@ public class AuthenticationSteps {
                     logger.error("Max login attempts reached, failing test");
                     response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 } else {
-                    try {
-                        Thread.sleep(500); // Wait before retry
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
+                    // Continue retry without delay - authentication should be immediate
                 }
             }
         }
@@ -592,12 +586,7 @@ public class AuthenticationSteps {
                     logger.error("Max helper login attempts reached for user {}", username);
                     throw new RuntimeException("Failed to login user after " + maxRetries + " attempts: " + username, e);
                 } else {
-                    try {
-                        Thread.sleep(500); // Wait before retry
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
+                    // Continue retry without delay - authentication should be immediate
                 }
             }
         }

@@ -22,11 +22,21 @@ import tqs.sparkflow.userservice.util.JwtUtil;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  @Autowired
-  private JwtUtil jwtUtil;
-
-  @Autowired
-  private UserDetailsService userDetailsService;
+  private static final String BEARER_PREFIX = "Bearer ";
+  
+  private final JwtUtil jwtUtil;
+  private final UserDetailsService userDetailsService;
+  
+  /**
+   * Constructor for JwtAuthenticationFilter.
+   * 
+   * @param jwtUtil the JWT utility service
+   * @param userDetailsService the user details service
+   */
+  public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    this.jwtUtil = jwtUtil;
+    this.userDetailsService = userDetailsService;
+  }
 
   /**
    * Filters incoming HTTP requests to extract and validate JWT tokens.
@@ -47,8 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String jwtToken = null;
 
     // JWT Token is in the form "Bearer token". Remove Bearer word and get only the Token
-    if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
-      jwtToken = requestTokenHeader.substring(7).trim();
+    if (requestTokenHeader != null && requestTokenHeader.startsWith(BEARER_PREFIX)) {
+      jwtToken = requestTokenHeader.substring(BEARER_PREFIX.length()).trim();
       if (!jwtToken.isEmpty()) {
         try {
           username = jwtUtil.extractUsername(jwtToken);
