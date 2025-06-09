@@ -19,10 +19,15 @@ import tqs.sparkflow.userservice.repository.UserRepository;
 @Service
 public class UserService {
 
+  private static final String EMAIL_EXISTS = "Email already exists: ";
+  private static final String USERNAME_EXISTS = "Username already exists: ";
+  private static final String USER_NOT_FOUND_ID = "User not found with id: ";
+  private static final String USER_NOT_FOUND_EMAIL = "User not found with email: ";
+
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
 
-  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+  public UserService(final UserRepository userRepository, final PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
   }
@@ -37,11 +42,11 @@ public class UserService {
    */
   public User createUser(UserCreateDto userDto) {
     if (userRepository.existsByEmail(userDto.getEmail())) {
-      throw new DuplicateEmailException("Email already exists: " + userDto.getEmail());
+      throw new DuplicateEmailException(EMAIL_EXISTS + userDto.getEmail());
     }
     
     if (userRepository.existsByUsername(userDto.getUsername())) {
-      throw new DuplicateUsernameException("Username already exists: " + userDto.getUsername());
+      throw new DuplicateUsernameException(USERNAME_EXISTS + userDto.getUsername());
     }
     
     User user = new User();
@@ -62,7 +67,7 @@ public class UserService {
    */
   public User getUserById(String id) {
     return userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_ID + id));
   }
 
   /**
@@ -74,7 +79,7 @@ public class UserService {
    */
   public User getUserByEmail(String email) {
     return userRepository.findByEmail(email)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_EMAIL + email));
   }
 
   /**
@@ -94,7 +99,7 @@ public class UserService {
     if (userDetails.getEmail() != null) {
       Optional<User> userWithSameEmail = userRepository.findByEmail(userDetails.getEmail());
       if (userWithSameEmail.isPresent() && !userWithSameEmail.get().getId().equals(id)) {
-        throw new DuplicateEmailException("Email already exists: " + userDetails.getEmail());
+        throw new DuplicateEmailException(EMAIL_EXISTS + userDetails.getEmail());
       }
       existingUser.setEmail(userDetails.getEmail());
     }
@@ -104,8 +109,7 @@ public class UserService {
       Optional<User> userWithSameUsername = 
           userRepository.findByUsername(userDetails.getUsername());
       if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(id)) {
-        throw new DuplicateUsernameException(
-            "Username already exists: " + userDetails.getUsername());
+        throw new DuplicateUsernameException(USERNAME_EXISTS + userDetails.getUsername());
       }
       existingUser.setUsername(userDetails.getUsername());
     }
@@ -131,7 +135,7 @@ public class UserService {
    */
   public void deleteUser(String id) {
     if (!userRepository.existsById(id)) {
-      throw new ResourceNotFoundException("User not found with id: " + id);
+      throw new ResourceNotFoundException(USER_NOT_FOUND_ID + id);
     }
     userRepository.deleteById(id);
   }

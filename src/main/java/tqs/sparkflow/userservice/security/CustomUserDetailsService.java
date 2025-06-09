@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
    * 
    * @param userRepository the user repository
    */
-  public CustomUserDetailsService(UserRepository userRepository) {
+  public CustomUserDetailsService(final UserRepository userRepository) {
     this.userRepository = userRepository;
   }
 

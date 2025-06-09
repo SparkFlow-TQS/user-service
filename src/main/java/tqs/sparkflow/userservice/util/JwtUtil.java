@@ -2,7 +2,6 @@ package tqs.sparkflow.userservice.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -75,10 +74,10 @@ public class JwtUtil {
    */
   private Claims extractAllClaims(String token) {
     return Jwts.parser()
-        .setSigningKey(getSigningKey())
+        .verifyWith(getSigningKey())
         .build()
-        .parseClaimsJws(token)
-        .getBody();
+        .parseSignedClaims(token)
+        .getPayload();
   }
 
   /**
@@ -128,11 +127,11 @@ public class JwtUtil {
    */
   private String createToken(Map<String, Object> claims, String subject, Long expiration) {
     return Jwts.builder()
-        .setClaims(claims)
-        .setSubject(subject)
-        .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(new Date(System.currentTimeMillis() + expiration))
-        .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+        .claims(claims)
+        .subject(subject)
+        .issuedAt(new Date(System.currentTimeMillis()))
+        .expiration(new Date(System.currentTimeMillis() + expiration))
+        .signWith(getSigningKey())
         .compact();
   }
 
@@ -147,7 +146,7 @@ public class JwtUtil {
     try {
       final String extractedUsername = extractUsername(token);
       return (extractedUsername.equals(username) && !isTokenExpired(token));
-    } catch (Exception e) {
+    } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
       // Token is invalid (expired, malformed, etc.)
       return false;
     }
@@ -178,7 +177,7 @@ public class JwtUtil {
     try {
       Claims claims = extractAllClaims(token);
       return REFRESH_TYPE.equals(claims.get(TYPE_CLAIM));
-    } catch (Exception e) {
+    } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
       return false;
     }
   }

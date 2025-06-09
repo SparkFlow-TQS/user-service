@@ -59,7 +59,8 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
-        assertThat(body).containsEntry("username", "Validation error");
+        assertThat(body).containsKey("username");
+        assertThat(body.get("username")).isEqualTo("Validation error");
     }
 
     @Test
@@ -76,7 +77,8 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
-        assertThat(body).containsEntry("message", "Username already exists");
+        assertThat(body).containsKey("message");
+        assertThat(body.get("message")).isEqualTo("Username already exists");
     }
 
     @Test
@@ -93,7 +95,8 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
-        assertThat(body).containsEntry("message", "Invalid credentials");
+        assertThat(body).containsKey("message");
+        assertThat(body.get("message")).isEqualTo("Invalid credentials");
     }
 
     @Test
@@ -110,7 +113,8 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
-        assertThat(body).containsEntry("message", "Email already exists");
+        assertThat(body).containsKey("message");
+        assertThat(body.get("message")).isEqualTo("Email already exists");
     }
 
     @Test
@@ -127,7 +131,8 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
-        assertThat(body).containsEntry("message", "Validation failed");
+        assertThat(body).containsKey("message");
+        assertThat(body.get("message")).isEqualTo("Validation failed");
     }
 
     @Test
@@ -150,8 +155,10 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
-        assertThat(body).containsEntry("username", "Username is required");
-        assertThat(body).containsEntry("email", "Email is invalid");
+        assertThat(body).containsKey("username");
+        assertThat(body.get("username")).isEqualTo("Username is required");
+        assertThat(body).containsKey("email");
+        assertThat(body.get("email")).isEqualTo("Email is invalid");
         assertThat(body).hasSize(2);
     }
 }

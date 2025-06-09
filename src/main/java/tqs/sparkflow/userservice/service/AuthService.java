@@ -43,8 +43,8 @@ public class AuthService {
    * @param passwordEncoder the password encoder
    * @param jwtUtil the JWT utility
    */
-  public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
-                     JwtUtil jwtUtil) {
+  public AuthService(final UserRepository userRepository, final PasswordEncoder passwordEncoder, 
+                     final JwtUtil jwtUtil) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtUtil = jwtUtil;
