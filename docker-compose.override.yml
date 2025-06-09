@@ -1,0 +1,14 @@
+services:
+  user-app:
+    environment:
+      - APP_PORT=${APP_PORT}
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+
+  user-db:
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE} 
