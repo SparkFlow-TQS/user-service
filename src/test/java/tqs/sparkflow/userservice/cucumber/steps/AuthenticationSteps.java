@@ -88,7 +88,8 @@ public class AuthenticationSteps {
             response = null;
             
             // Cleanup complete - no delay needed for MongoDB operations
-        } catch (Exception e) {
+        } catch (org.springframework.data.mongodb.UncategorizedMongoDbException | 
+                 java.lang.IllegalArgumentException e) {
             logger.warn("Error cleaning database: {}", e.getMessage());
         }
     }
@@ -171,7 +172,7 @@ public class AuthenticationSteps {
             headers.setBearerAuth(adminToken);
             HttpEntity<String> entity = new HttpEntity<>(operatorJson, headers);
             response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
-        } catch (Exception e) {
+        } catch (org.springframework.web.client.RestClientException e) {
             logger.error("Error during operator registration: {}", e.getMessage());
             response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -210,7 +211,8 @@ public class AuthenticationSteps {
                 // If we get here without exception, break the retry loop
                 break;
                 
-            } catch (Exception e) {
+            } catch (org.springframework.web.client.RestClientException | 
+                     java.lang.RuntimeException e) {
                 logger.error("Error during login attempt {}: {}", attempt, e.getMessage());
                 
                 if (attempt >= maxRetries) {
@@ -287,7 +289,7 @@ public class AuthenticationSteps {
             HttpHeaders headers = createAuthenticatedHeaders();
             HttpEntity<String> entity = new HttpEntity<>(newUserJson, headers);
             response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
-        } catch (Exception e) {
+        } catch (org.springframework.web.client.RestClientException e) {
             logger.error("Error during user creation: {}", e.getMessage());
             response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -584,7 +586,8 @@ public class AuthenticationSteps {
                 // If we get here without exception, break the retry loop
                 break;
                 
-            } catch (Exception e) {
+            } catch (org.springframework.web.client.RestClientException | 
+                     java.lang.RuntimeException e) {
                 logger.error("Error during helper login attempt {} for user {}: {}", attempt, username, e.getMessage());
                 
                 if (attempt >= maxRetries) {
@@ -610,7 +613,8 @@ public class AuthenticationSteps {
         try {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             return jsonNode.get("accessToken").asText();
-        } catch (Exception e) {
+        } catch (com.fasterxml.jackson.core.JsonProcessingException | 
+                 java.lang.NullPointerException e) {
             logger.error("Failed to extract token from response: {}", e.getMessage());
             return null;
         }
@@ -620,7 +624,8 @@ public class AuthenticationSteps {
         try {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             return jsonNode.get("refreshToken").asText();
-        } catch (Exception e) {
+        } catch (com.fasterxml.jackson.core.JsonProcessingException | 
+                 java.lang.NullPointerException e) {
             logger.error("Failed to extract refresh token from response: {}", e.getMessage());
             return null;
         }

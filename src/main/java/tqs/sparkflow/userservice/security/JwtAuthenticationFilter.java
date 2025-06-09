@@ -33,7 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
    * @param jwtUtil the JWT utility service
    * @param userDetailsService the user details service
    */
-  public JwtAuthenticationFilter(final JwtUtil jwtUtil, final UserDetailsService userDetailsService) {
+  public JwtAuthenticationFilter(final JwtUtil jwtUtil, 
+                                 final UserDetailsService userDetailsService) {
     this.jwtUtil = jwtUtil;
     this.userDetailsService = userDetailsService;
   }
@@ -84,7 +85,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           // After setting the Authentication in the context, we specify
           // that the current user is authenticated. So it passes the Spring Security 
           // Configurations successfully.
-          SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+          SecurityContextHolder.getContext()
+              .setAuthentication(usernamePasswordAuthenticationToken);
         }
       } catch (Exception e) {
         logger.warn("Unable to load user details for username: " + username);

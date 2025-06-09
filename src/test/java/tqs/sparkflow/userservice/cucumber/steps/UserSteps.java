@@ -74,7 +74,8 @@ public class UserSteps {
             jwtToken = null;
             
             // Cleanup complete - no delay needed for MongoDB operations
-        } catch (Exception e) {
+        } catch (org.springframework.data.mongodb.UncategorizedMongoDbException | 
+                 java.lang.IllegalArgumentException e) {
             logger.warn("Error cleaning database: {}", e.getMessage());
         }
     }
@@ -136,7 +137,8 @@ public class UserSteps {
             }
             
             logger.info("Successfully authenticated as admin");
-        } catch (Exception e) {
+        } catch (org.springframework.web.client.RestClientException | 
+                 java.lang.RuntimeException e) {
             logger.error("Error during authentication test: {}", e.getMessage(), e);
             throw new RuntimeException("Error during authentication test: " + e.getMessage(), e);
         }

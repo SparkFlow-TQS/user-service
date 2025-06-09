@@ -44,6 +44,9 @@ import tqs.sparkflow.userservice.service.UserService;
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
+  private static final String USER_NOT_FOUND_DESC = "User not found";
+  private static final String EMAIL_ALREADY_EXISTS_DESC = "Email already exists";
+  
   private final UserService userService;
 
   public UserController(final UserService userService) {
@@ -62,7 +65,7 @@ public class UserController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "User created successfully",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "409", description = "Email already exists"),
+      @ApiResponse(responseCode = "409", description = EMAIL_ALREADY_EXISTS_DESC),
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PostMapping
@@ -88,7 +91,7 @@ public class UserController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "User found",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC)
   })
   @GetMapping("/{id}")
   @PreAuthorize("hasRole('OPERATOR')")
@@ -114,7 +117,7 @@ public class UserController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "User found",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC)
   })
   @GetMapping("/email/{email}")
   public ResponseEntity<User> getUserByEmail(
@@ -140,8 +143,8 @@ public class UserController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "User updated successfully",
         content = @Content(schema = @Schema(implementation = User.class))),
-      @ApiResponse(responseCode = "404", description = "User not found"),
-      @ApiResponse(responseCode = "409", description = "Email already exists"),
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC),
+      @ApiResponse(responseCode = "409", description = EMAIL_ALREADY_EXISTS_DESC),
       @ApiResponse(responseCode = "400", description = "Invalid input data")
   })
   @PutMapping("/{id}")
@@ -169,7 +172,7 @@ public class UserController {
   @Operation(summary = "Delete user", description = "Deletes a user by their ID")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-      @ApiResponse(responseCode = "404", description = "User not found")
+      @ApiResponse(responseCode = "404", description = USER_NOT_FOUND_DESC)
   })
   @DeleteMapping("/{id}")
   @PreAuthorize("hasRole('OPERATOR')")

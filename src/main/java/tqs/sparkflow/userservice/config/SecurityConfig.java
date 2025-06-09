@@ -7,11 +7,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configuration
+    .AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
+import org.springframework.security.config.annotation.web.configurers
+    .AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -86,7 +88,8 @@ public class SecurityConfig {
             .policy(buildPermissionsPolicy()));
   }
   
-  private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+  private void configureAuthorization(
+      AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
     auth
         .requestMatchers(
             "/v3/api-docs/**",

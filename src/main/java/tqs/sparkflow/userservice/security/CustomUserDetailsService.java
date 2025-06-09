@@ -17,6 +17,8 @@ import tqs.sparkflow.userservice.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
+  private static final String USER_NOT_FOUND = "User not found: ";
+  
   private final UserRepository userRepository;
   
   /**
@@ -38,7 +40,7 @@ public class CustomUserDetailsService implements UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND + username));
 
     List<SimpleGrantedAuthority> authorities = new ArrayList<>();
     if (user.isOperator()) {
