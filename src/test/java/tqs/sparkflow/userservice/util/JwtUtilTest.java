@@ -247,4 +247,39 @@ class JwtUtilTest {
         
         assertThat(isRefresh).isFalse();
     }
+
+    @Test
+    void whenValidateTokenWithExceptionsWithValidToken_thenReturnTrue() {
+        String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
+        
+        Boolean isValid = jwtUtil.validateTokenWithExceptions(token, testUser.getUsername());
+        
+        assertThat(isValid).isTrue();
+    }
+
+    @Test
+    void whenValidateTokenWithExceptionsWithInvalidToken_thenThrowException() {
+        String invalidToken = "invalid.token.format";
+        
+        assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(invalidToken, testUser.getUsername()))
+            .isInstanceOf(MalformedJwtException.class);
+    }
+
+    @Test
+    void whenValidateTokenWithExceptionsWithExpiredToken_thenThrowException() {
+        // Set very short expiration time
+        ReflectionTestUtils.setField(jwtUtil, "jwtExpiration", 1L);
+        
+        String token = jwtUtil.generateToken(testUser.getUsername(), testUser.getEmail(), testUser.isOperator());
+        
+        // Wait for token to expire
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        assertThatThrownBy(() -> jwtUtil.validateTokenWithExceptions(token, testUser.getUsername()))
+            .isInstanceOf(ExpiredJwtException.class);
+    }
 } 

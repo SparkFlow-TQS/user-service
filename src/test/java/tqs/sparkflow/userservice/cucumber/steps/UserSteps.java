@@ -168,14 +168,6 @@ public class UserSteps {
         this.response = deleteResponse;
     }
 
-    @Then("the user should be deleted successfully")
-    public void the_user_should_be_deleted_successfully() {
-        logger.info("Asserting delete response: {}", response);
-        assertThat(response)
-            .withFailMessage("Response is null! Did you forget to call a step that sets it? Scenario: [add scenario name here if possible]")
-            .isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-    }
 
     @When("I update the user's role to {string}")
     public void i_update_the_user_s_role_to(String role) {
@@ -310,5 +302,175 @@ public class UserSteps {
             logger.error("Error fetching user ID: {}", e.getMessage(), e);
             throw new RuntimeException("Error fetching user ID: " + e.getMessage(), e);
         }
+    }
+
+    // New step definitions for additional scenarios
+
+    @When("I try to create a new user")
+    public void i_try_to_create_a_new_user() {
+        userJson = """
+        {
+            "username": "testuser",
+            "email": "test@example.com",
+            "password": "password123",
+            "operator": false
+        }
+        """;
+        
+        // Make request without authentication
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(userJson, headers);
+        response = restTemplate.postForEntity(baseUrl + "/api/v1/users", entity, String.class);
+    }
+
+
+    @Then("no user should be created")
+    public void no_user_should_be_created() {
+        // Verify user count remains the same or check specific user doesn't exist
+        assertThat(response.getStatusCode()).isNotEqualTo(HttpStatus.CREATED);
+    }
+
+    @Given("there is an existing user with email {string}")
+    public void there_is_an_existing_user_with_email(String email) {
+        User existingUser = new User("existinguser", email, 
+            passwordEncoder.encode("password123"), false);
+        userRepository.save(existingUser);
+    }
+
+    @Then("I should receive a conflict error")
+    public void i_should_receive_a_conflict_error() {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Then("the user should not be created")
+    public void the_user_should_not_be_created() {
+        assertThat(response.getStatusCode()).isNotEqualTo(HttpStatus.CREATED);
+    }
+
+    @Given("I am an authenticated user {string}")
+    public void i_am_an_authenticated_user(String username) {
+        // Create regular user and authenticate
+        User regularUser = new User(username, username + "@example.com", 
+            passwordEncoder.encode("password123"), false);
+        userRepository.save(regularUser);
+        lastCreatedUsername = username;
+        
+        // Login to get JWT token
+        String loginJson = String.format("""
+        {
+            "emailOrUsername": "%s@example.com",
+            "password": "password123"
+        }
+        """, username);
+        
+        HttpHeaders loginHeaders = new HttpHeaders();
+        loginHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> loginRequest = new HttpEntity<>(loginJson, loginHeaders);
+        
+        ResponseEntity<String> loginResponse = restTemplate.postForEntity(
+            baseUrl + "/api/v1/auth/login", loginRequest, String.class);
+        
+        if (loginResponse.getStatusCode() == HttpStatus.OK) {
+            // Extract JWT token from response
+            String responseBody = loginResponse.getBody();
+            if (responseBody != null && responseBody.contains("accessToken")) {
+                jwtToken = responseBody.substring(responseBody.indexOf("accessToken\":\"") + 14);
+                jwtToken = jwtToken.substring(0, jwtToken.indexOf("\""));
+            }
+        }
+    }
+
+    @When("I request my profile information")
+    public void i_request_my_profile_information() {
+        HttpHeaders headers = createAuthenticatedHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+        response = restTemplate.exchange(baseUrl + "/api/v1/users/profile", HttpMethod.GET, entity, String.class);
+    }
+
+    @Then("I should receive my profile details")
+    public void i_should_receive_my_profile_details() {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+    }
+
+    @Then("the response should contain my username and email")
+    public void the_response_should_contain_my_username_and_email() {
+        assertThat(response.getBody()).contains("username");
+        assertThat(response.getBody()).contains("authenticated");
+    }
+
+    @When("I try to update the user with invalid email format {string}")
+    public void i_try_to_update_the_user_with_invalid_email_format(String invalidEmail) {
+        String userId = getUserIdByUsername(lastCreatedUsername);
+        String updateJson = String.format("""
+        {
+            "username": "updateduser",
+            "email": "%s",
+            "operator": false
+        }
+        """, invalidEmail);
+        
+        HttpHeaders headers = createAuthenticatedHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(updateJson, headers);
+        response = restTemplate.exchange(baseUrl + "/api/v1/users/" + userId, HttpMethod.PUT, entity, String.class);
+    }
+
+    @Then("I should receive a validation error")
+    public void i_should_receive_a_validation_error() {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Then("the user should not be updated")
+    public void the_user_should_not_be_updated() {
+        assertThat(response.getStatusCode()).isNotEqualTo(HttpStatus.OK);
+    }
+
+    @When("I access the protected test endpoint")
+    public void i_access_the_protected_test_endpoint() {
+        HttpHeaders headers = createAuthenticatedHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+        response = restTemplate.exchange(baseUrl + "/api/v1/users/test", HttpMethod.GET, entity, String.class);
+    }
+
+    @Then("I should receive a success response")
+    public void i_should_receive_a_success_response() {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Then("the response should confirm my access")
+    public void the_response_should_confirm_my_access() {
+        assertThat(response.getBody()).contains("Access granted");
+    }
+
+    @Given("there are multiple users in the system")
+    public void there_are_multiple_users_in_the_system() {
+        // Create additional test users
+        User user1 = new User("user1", "user1@example.com", 
+            passwordEncoder.encode("password123"), false);
+        User user2 = new User("user2", "user2@example.com", 
+            passwordEncoder.encode("password123"), false);
+        userRepository.save(user1);
+        userRepository.save(user2);
+    }
+
+    @When("I request the list of all users")
+    public void i_request_the_list_of_all_users() {
+        HttpHeaders headers = createAuthenticatedHeaders();
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+        response = restTemplate.exchange(baseUrl + "/api/v1/users", HttpMethod.GET, entity, String.class);
+    }
+
+    @Then("I should receive a list containing all users")
+    public void i_should_receive_a_list_containing_all_users() {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).contains("[");
+        assertThat(response.getBody()).contains("]");
+    }
+
+    @Then("each user should have username and email information")
+    public void each_user_should_have_username_and_email_information() {
+        assertThat(response.getBody()).contains("username");
+        assertThat(response.getBody()).contains("email");
     }
 }

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tqs.sparkflow.userservice.dto.JwtResponseDto;
 import tqs.sparkflow.userservice.dto.LoginDto;
+import tqs.sparkflow.userservice.dto.RefreshTokenRequestDto;
 import tqs.sparkflow.userservice.dto.RegisterDto;
 import tqs.sparkflow.userservice.exception.AuthenticationException;
 import tqs.sparkflow.userservice.exception.DuplicateEmailException;
@@ -149,6 +150,79 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void whenRefreshTokenWithValidToken_thenReturnNewTokens() throws Exception {
+        // Given
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
+        refreshRequest.setRefreshToken("valid-refresh-token");
+        
+        JwtResponseDto jwtResponse = new JwtResponseDto();
+        jwtResponse.setAccessToken("new-access-token");
+        jwtResponse.setRefreshToken("new-refresh-token");
+        jwtResponse.setTokenType("Bearer");
+        jwtResponse.setUsername("testuser");
+        jwtResponse.setEmail("test@example.com");
+
+        when(authService.refreshToken(any(RefreshTokenRequestDto.class))).thenReturn(jwtResponse);
+
+        // When & Then
+        mockMvc.perform(post("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(refreshRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"));
+    }
+
+    @Test
+    void whenRefreshTokenWithInvalidToken_thenReturnUnauthorized() throws Exception {
+        // Given
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
+        refreshRequest.setRefreshToken("invalid-refresh-token");
+
+        when(authService.refreshToken(any(RefreshTokenRequestDto.class)))
+            .thenThrow(new AuthenticationException("Invalid refresh token"));
+
+        // When & Then
+        mockMvc.perform(post("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(refreshRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void whenRefreshTokenWithExpiredToken_thenReturnUnauthorized() throws Exception {
+        // Given
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
+        refreshRequest.setRefreshToken("expired-refresh-token");
+
+        when(authService.refreshToken(any(RefreshTokenRequestDto.class)))
+            .thenThrow(new AuthenticationException("Refresh token expired"));
+
+        // When & Then
+        mockMvc.perform(post("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(refreshRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void whenRefreshTokenWithInvalidData_thenReturnBadRequest() throws Exception {
+        // Given
+        RefreshTokenRequestDto refreshRequest = new RefreshTokenRequestDto();
+        refreshRequest.setRefreshToken(""); // Empty token
+
+        when(authService.refreshToken(any(RefreshTokenRequestDto.class)))
+            .thenThrow(new ValidationException("Refresh token is required"));
+
+        // When & Then
+        mockMvc.perform(post("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(refreshRequest)))
                 .andExpect(status().isBadRequest());
     }
 } 

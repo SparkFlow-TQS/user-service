@@ -19,6 +19,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import jakarta.validation.Path;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
@@ -123,5 +128,30 @@ class GlobalExceptionHandlerTest {
         @SuppressWarnings("unchecked")
         Map<String, String> body = (Map<String, String>) response.getBody();
         assertThat(body).containsEntry("message", "Validation failed");
+    }
+
+    @Test
+    void testHandleMethodArgumentNotValidException() {
+        // Given
+        BindingResult bindingResult = mock(BindingResult.class);
+        FieldError fieldError1 = new FieldError("userDto", "username", "Username is required");
+        FieldError fieldError2 = new FieldError("userDto", "email", "Email is invalid");
+        
+        when(bindingResult.getAllErrors()).thenReturn(List.of(fieldError1, fieldError2));
+        
+        MethodArgumentNotValidException exception = new MethodArgumentNotValidException(null, bindingResult);
+
+        // When
+        ResponseEntity<Object> response = globalExceptionHandler
+            .handleValidationException(exception, webRequest);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        @SuppressWarnings("unchecked")
+        Map<String, String> body = (Map<String, String>) response.getBody();
+        assertThat(body).containsEntry("username", "Username is required");
+        assertThat(body).containsEntry("email", "Email is invalid");
+        assertThat(body).hasSize(2);
     }
 }
